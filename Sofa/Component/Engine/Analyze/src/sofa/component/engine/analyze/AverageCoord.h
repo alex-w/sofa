@@ -59,15 +59,15 @@ public:
 
     void doUpdate() override;
 
-    Data<VecIndex> d_indices;    ///< indices of the coordinates to average
-    Data<unsigned> d_vecId;  ///< index of the vector (default value corresponds to core::VecCoordId::position() )
+    Data<VecIndex> d_indices; ///< indices of the coordinates to average
+    Data<unsigned> d_vecId; ///< index of the vector (default value corresponds to core::vec_id::write_access::position )
     Data<Coord> d_average;       ///< result
 
     void handleEvent(core::objectmodel::Event *event) override;
     void onBeginAnimationStep(const double /*dt*/);
 };
 
-#if  !defined(SOFA_COMPONENT_ENGINE_AverageCoord_CPP)
+#if !defined(SOFA_COMPONENT_ENGINE_AverageCoord_CPP)
 extern template class SOFA_COMPONENT_ENGINE_ANALYZE_API AverageCoord<defaulttype::Vec2Types>;
 extern template class SOFA_COMPONENT_ENGINE_ANALYZE_API AverageCoord<defaulttype::Vec3Types>;
 extern template class SOFA_COMPONENT_ENGINE_ANALYZE_API AverageCoord<defaulttype::Rigid2Types>;

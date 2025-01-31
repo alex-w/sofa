@@ -28,6 +28,8 @@
 #include <sofa/component/solidmechanics/spring/PolynomialRestShapeSpringsForceField.h>
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/helper/AdvancedTimer.h>
+#include <sofa/helper/ScopedAdvancedTimer.h>
+
 
 namespace sofa::component::solidmechanics::spring
 {
@@ -35,7 +37,7 @@ namespace sofa::component::solidmechanics::spring
 template<class DataTypes>
 PolynomialRestShapeSpringsForceField<DataTypes>::PolynomialRestShapeSpringsForceField()
     : d_points(initData(&d_points, "points", "points controlled by the rest shape springs"))
-    , d_external_points(initData(&d_external_points, "external_points", "points from the external Mechancial State that define the rest shape springs"))
+    , d_external_points(initData(&d_external_points, "external_points", "points from the external Mechanical State that define the rest shape springs"))
     , d_polynomialStiffness(initData(&d_polynomialStiffness, "polynomialStiffness", "coefficients for all spring polynomials"))
     , d_polynomialDegree(initData(&d_polynomialDegree, "polynomialDegree", "vector of values that show polynomials degrees"))
     , d_recomputeIndices(initData(&d_recomputeIndices, false, "recompute_indices", "Recompute indices (should be false for BBOX)"))
@@ -208,14 +210,14 @@ const typename PolynomialRestShapeSpringsForceField<DataTypes>::DataVecCoord* Po
     {
         if (d_restMState)
         {
-            return d_restMState->read(core::VecCoordId::position());
+            return d_restMState->read(core::vec_id::write_access::position);
         }
     }
     else
     {
         if (this->mstate)
         {
-            return this->mstate->read(core::VecCoordId::restPosition());
+            return this->mstate->read(core::vec_id::write_access::restPosition);
         }
     }
     return nullptr;
@@ -410,7 +412,7 @@ void PolynomialRestShapeSpringsForceField<DataTypes>::draw(const core::visual::V
     }
 
     helper::ReadAccessor< DataVecCoord > p0 = *extPosition;
-    helper::ReadAccessor< DataVecCoord > p  = this->mstate->read(core::VecCoordId::position());
+    helper::ReadAccessor< DataVecCoord > p  = this->mstate->read(core::vec_id::write_access::position);
 
     const VecIndex& indices = m_indices;
     const VecIndex& ext_indices = (m_useRestMState ? m_ext_indices : m_indices);
@@ -453,7 +455,7 @@ void PolynomialRestShapeSpringsForceField<DataTypes>::addKToMatrix(const core::M
 {    
     msg_info() << "[" <<  this->getName() << "]: addKToMatrix";
 
-    sofa::helper::AdvancedTimer::stepBegin("restShapePolynomialSpringAddKToMatrix");
+    SCOPED_TIMER("restShapePolynomialSpringAddKToMatrix");
 
     const sofa::core::behavior::MultiMatrixAccessor::MatrixRef mref = matrix->getMatrix(this->mstate);
     sofa::linearalgebra::BaseMatrix* mat = mref.matrix;
@@ -472,8 +474,6 @@ void PolynomialRestShapeSpringsForceField<DataTypes>::addKToMatrix(const core::M
             mat->add(offset + Dimension * curIndex + i, offset + Dimension * curIndex + i, -kFact * jacobVector[i]);
         }
     }
-
-    sofa::helper::AdvancedTimer::stepEnd("restShapePolynomialSpringAddKToMatrix");
 }
 
 template <class DataTypes>

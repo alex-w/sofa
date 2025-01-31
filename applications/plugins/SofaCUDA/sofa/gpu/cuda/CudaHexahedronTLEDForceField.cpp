@@ -28,13 +28,8 @@
 #include <fstream>
 using namespace std;
 
-namespace sofa
-{
 
-namespace gpu
-{
-
-namespace cuda
+namespace sofa::gpu::cuda
 {
 
 int CudaHexahedronTLEDForceFieldCudaClass = core::RegisterObject("GPU-side TLED hexahedron forcefield using CUDA")
@@ -221,15 +216,15 @@ void CudaHexahedronTLEDForceField::reinit()
         nbVertex = nelems.rbegin()->first + 1;
     }
 
-    std::cout << "CudaHexahedronTLEDForceField: " << nbElems << " elements, " << nbVertex << " nodes, max " << nbElementPerVertex << " elements per node" << std::endl;
+    msg_info() << "CudaHexahedronTLEDForceField: " << nbElems << " elements, " << nbVertex << " nodes, max " << nbElementPerVertex << " elements per node";
 
 
     /**
      * Precomputations
      */
-    std::cout << "CudaHexahedronTLEDForceField: precomputations..." << std::endl;
+    msg_info() << "CudaHexahedronTLEDForceField: precomputations...";
 
-    const VecCoord& x = this->mstate->read(core::ConstVecCoordId::position())->getValue();
+    const VecCoord& x = this->mstate->read(core::vec_id::read_access::position)->getValue();
     nelems.clear();
 
     // Shape function natural derivatives DhDr
@@ -470,7 +465,7 @@ void CudaHexahedronTLEDForceField::addForce (const sofa::core::MechanicalParams*
     const VecCoord& x  =   dataX.getValue()  ;
 
     // Gets initial positions (allow to compute displacements by doing the difference between initial and current positions)
-    const VecCoord& x0 = mstate->read(core::ConstVecCoordId::restPosition())->getValue();
+    const VecCoord& x0 = mstate->read(core::vec_id::read_access::restPosition)->getValue();
 
     f.resize(x.size());
     CudaHexahedronTLEDForceField3f_addForce(
@@ -731,9 +726,9 @@ void CudaHexahedronTLEDForceField::ComputeHGParams(const Element& e, const VecCo
     {
         for (int j = 0; j < 4; j++)
         {
-            for (int k = 0; k < 8; k++)
+            for (int kk = 0; kk < 8; kk++)
             {
-                gamma[i][j] += A[i][k]*Gamma[k][j];
+                gamma[i][j] += A[i][kk]*Gamma[kk][j];
             }
         }
     }
@@ -753,9 +748,9 @@ void CudaHexahedronTLEDForceField::ComputeHGParams(const Element& e, const VecCo
     {
         for (int j = 0; j < 8; j++)
         {
-            for (int k = 0; k < 4; k++)
+            for (int kk = 0; kk < 4; kk++)
             {
-                HG[i][j] += gamma[i][k]*gamma[j][k];
+                HG[i][j] += gamma[i][kk]*gamma[j][kk];
             }
         }
     }
@@ -779,8 +774,8 @@ void CudaHexahedronTLEDForceField::updateLameCoefficients(void)
     Mu = youngModulus.getValue()/(2*(1 + poissonRatio.getValue()));
 }
 
-} // namespace cuda
+} // namespace sofa::gpu::cuda
 
-} // namespace gpu
 
-} // namespace sofa
+
+

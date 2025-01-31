@@ -23,7 +23,7 @@
 #include <sofa/component/linearsystem/MappingGraph.h>
 #include <sofa/core/MechanicalParams.h>
 #include <sofa/simulation/graph/DAGNode.h>
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 #include <sofa/component/statecontainer/MechanicalObject.h>
 #include <sofa/component/mapping/linear/SubsetMapping.h>
 #include <sofa/simulation/graph/DAGSimulation.h>
@@ -175,6 +175,8 @@ TEST(MappingGraph, diamondMapping)
 
     sofa::simulation::Node::SPtr root = simulation->createNewGraph("root");
     EXPECT_EQ(root->getName(), "root");
+
+    sofa::simpleapi::importPlugin(Sofa.Component.Mapping.Linear);
 
     const auto top = sofa::core::objectmodel::New<sofa::component::statecontainer::MechanicalObject<sofa::defaulttype::Vec3Types> >();
     root->addObject(top);

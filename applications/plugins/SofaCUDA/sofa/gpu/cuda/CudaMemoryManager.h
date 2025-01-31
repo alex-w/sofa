@@ -33,19 +33,12 @@
 namespace sofa::gpu::cuda
 {
 
-//CPU MemoryManager
+//GPU MemoryManager
 template <class T >
 class CudaMemoryManager : public sofa::helper::MemoryManager<T>
 {
 
 public :
-
-    template<class T2> struct SOFA_ATTRIBUTE_DISABLED__REBIND() rebind
-    {
-        typedef DeprecatedAndRemoved other;
-    };
-
-
     typedef T* host_pointer;
     typedef /*mutable*/ void* device_pointer;
 #if SOFACUDA_HAVE_SOFA_GL == 1
@@ -85,13 +78,13 @@ public :
 
     static void memcpyHostToDevice(int d, device_pointer dDestPointer, const host_pointer hSrcPointer, size_t n)
     {
-        if (mycudaVerboseLevel>=LOG_TRACE) std::cout << "CUDA: CPU->GPU copy of "<<sofa::helper::NameDecoder::decodeTypeName ( typeid ( *hSrcPointer ) ) <<": "<<n*sizeof(T) <<" B"<<std::endl;
+        msg_info_when(mycudaVerboseLevel>=LOG_TRACE, "SofaCUDA") << "CUDA: CPU->GPU copy of "<<sofa::helper::NameDecoder::decodeTypeName ( typeid ( *hSrcPointer ) ) <<": "<<n*sizeof(T) <<" B";
         mycudaMemcpyHostToDevice(dDestPointer,hSrcPointer,n,d);
     }
 
     static void memcpyDeviceToHost(int d, host_pointer hDestPointer, const void * dSrcPointer , size_t n)
     {
-        if (mycudaVerboseLevel>=LOG_TRACE) std::cout << "CUDA: GPU->CPU copy of "<<sofa::helper::NameDecoder::decodeTypeName ( typeid ( *hDestPointer ) ) <<": "<<n*sizeof(T) <<" B"<<std::endl;
+        msg_info_when(mycudaVerboseLevel>=LOG_TRACE, "SofaCUDA") << "CUDA: GPU->CPU copy of "<<sofa::helper::NameDecoder::decodeTypeName ( typeid ( *hDestPointer ) ) <<": "<<n*sizeof(T) <<" B";
         mycudaMemcpyDeviceToHost(hDestPointer,dSrcPointer,n,d);
     }
 

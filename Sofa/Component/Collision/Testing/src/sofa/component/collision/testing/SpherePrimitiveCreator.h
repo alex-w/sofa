@@ -87,7 +87,7 @@ inline sofa::component::collision::geometry::SphereCollisionModel<sofa::defaultt
 
     dpositions.endEdit();
 
-    //Editting the velocity of the OBB
+    //Editing the velocity of the OBB
     Data<MechanicalObjectRigid3::VecDeriv>& dvelocities = *sphereDOF->write(sofa::core::VecId::velocity());
 
     MechanicalObjectRigid3::VecDeriv& velocities = *dvelocities.beginEdit();
@@ -103,11 +103,11 @@ inline sofa::component::collision::geometry::SphereCollisionModel<sofa::defaultt
 
     //editing the RigidSphereModel
     sphereCollisionModel->init();
-    sofa::component::collision::geometry::SphereCollisionModel<sofa::defaulttype::Rigid3Types>::VecReal& vecRad = *(sphereCollisionModel->radius.beginEdit());
+    sofa::component::collision::geometry::SphereCollisionModel<sofa::defaulttype::Rigid3Types>::VecReal& vecRad = *(sphereCollisionModel->d_radius.beginEdit());
 
     vecRad[0] = radius;
 
-    sphereCollisionModel->radius.endEdit();
+    sphereCollisionModel->d_radius.endEdit();
 
     return sphereCollisionModel;
 }
@@ -130,7 +130,7 @@ inline sofa::component::collision::geometry::SphereCollisionModel<sofa::defaultt
 
     dpositions.endEdit();
 
-    //Editting the velocity of the OBB
+    //Editing the velocity of the OBB
     Data<MechanicalObject3::VecDeriv>& dvelocities = *sphereDOF->write(sofa::core::VecId::velocity());
 
     MechanicalObject3::VecDeriv& velocities = *dvelocities.beginEdit();
@@ -144,13 +144,13 @@ inline sofa::component::collision::geometry::SphereCollisionModel<sofa::defaultt
     sofa::component::collision::geometry::SphereCollisionModel<sofa::defaulttype::Vec3Types>::SPtr sphereCollisionModel = New<sofa::component::collision::geometry::SphereCollisionModel<sofa::defaulttype::Vec3Types>>();
     sphere->addObject(sphereCollisionModel);
 
-    //editting the RigidSphereModel
+    //editing the RigidSphereModel
     sphereCollisionModel->init();
-    sofa::component::collision::geometry::SphereCollisionModel<sofa::defaulttype::Vec3Types>::VecReal& vecRad = *(sphereCollisionModel->radius.beginEdit());
+    sofa::component::collision::geometry::SphereCollisionModel<sofa::defaulttype::Vec3Types>::VecReal& vecRad = *(sphereCollisionModel->d_radius.beginEdit());
 
     vecRad[0] = radius;
 
-    sphereCollisionModel->radius.endEdit();
+    sphereCollisionModel->d_radius.endEdit();
 
     return sphereCollisionModel;
 }

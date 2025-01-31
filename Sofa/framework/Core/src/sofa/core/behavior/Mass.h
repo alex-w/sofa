@@ -156,7 +156,7 @@ public:
 
 protected:
     /// stream to export Kinematic, Potential and Mechanical Energy to gnuplot files
-    std::ofstream* m_gnuplotFileEnergy;
+    std::unique_ptr<std::ofstream> m_gnuplotFileEnergy;
 
 public:
     bool insertInNode( objectmodel::BaseNode* node ) override { BaseMass::insertInNode(node); BaseForceField::insertInNode(node); return true; }
@@ -165,7 +165,7 @@ public:
 };
 
 
-#if  !defined(SOFA_CORE_BEHAVIOR_MASS_CPP)
+#if !defined(SOFA_CORE_BEHAVIOR_MASS_CPP)
 extern template class SOFA_CORE_API Mass<defaulttype::Vec3Types>;
 extern template class SOFA_CORE_API Mass<defaulttype::Vec2Types>;
 extern template class SOFA_CORE_API Mass<defaulttype::Vec1Types>;

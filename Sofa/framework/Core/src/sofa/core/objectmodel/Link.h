@@ -108,7 +108,7 @@ template<class TDestType, class TDestPtr, class TValueType, bool multiLink>
 class LinkTraitsContainer;
 
 
-/// Class to hold 0-or-1 pointer. The interface is similar to std::vector (size/[]/begin/end), plus an automatic convertion to one pointer.
+/// Class to hold 0-or-1 pointer. The interface is similar to std::vector (size/[]/begin/end), plus an automatic conversion to one pointer.
 template < class T, class TDestPtr, class TPtr = T* >
 class SinglePtr
 {
@@ -467,9 +467,6 @@ public:
         m_owner->addLink(this);
     }
 
-    SOFA_ATTRIBUTE_DISABLED("v21.06 (PR#1717)", "v21.12", "Use PathResolver::CheckPaths(Base*, BaseClass*, string) instead.")
-    static bool CheckPath(const std::string& path, Base* context) = delete;
-
 protected:
     OwnerType* m_owner {nullptr};
     Container m_value;
@@ -604,9 +601,6 @@ public:
     {
         return get(index);
     }
-
-    SOFA_ATTRIBUTE_DISABLED("v21.06 (PR#1717)", "v21.12", "Use PathResolver::CheckPaths(Base*, BaseClass*, string) instead.")
-    static bool CheckPaths(const std::string& pathes, Base* context) = delete;
 
 protected:
     ValidatorFn m_validator;

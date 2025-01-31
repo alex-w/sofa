@@ -48,14 +48,14 @@ using sofa::gl::component::rendering2d::OglLabel ;
 #include <sofa/type/RGBAColor.h>
 using sofa::type::RGBAColor ;
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 
 class OglLabelTest : public BaseTest
 {
 public:
-    void SetUp() override
+    void doSetUp() override
     {
-        sofa::simpleapi::importPlugin("Sofa.GL.Component.Rendering2D");
+        sofa::simpleapi::importPlugin(Sofa.GL.Component.Rendering2D);
     }
 
     void checkExcludingAttributes()

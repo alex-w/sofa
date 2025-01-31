@@ -28,12 +28,11 @@
 namespace sofa::component::topology::container::dynamic
 {
 
-using namespace std;
-using namespace sofa::defaulttype;
-
-int QuadSetTopologyContainerClass = core::RegisterObject("Quad set topology container")
-        .add< QuadSetTopologyContainer >()
-        ;
+void registerQuadSetTopologyContainer(sofa::core::ObjectFactory* factory)
+{
+    factory->registerObjects(core::ObjectRegistrationData("Topology container dedicated to a quad topology.")
+        .add< QuadSetTopologyContainer >());
+}
 
 QuadSetTopologyContainer::QuadSetTopologyContainer()
     : EdgeSetTopologyContainer()
@@ -73,13 +72,13 @@ void QuadSetTopologyContainer::init()
 
     // only init if triangles are present at init.
     if (!m_quads.empty())
-        initTopology();
+        computeCrossElementBuffers();
 }
 
-void QuadSetTopologyContainer::initTopology()
+void QuadSetTopologyContainer::computeCrossElementBuffers()
 {
-    // Force creation of Edge Neighboordhood buffers.
-    EdgeSetTopologyContainer::initTopology();
+    // Force creation of Edge Neighborhood buffers.
+    EdgeSetTopologyContainer::computeCrossElementBuffers();
 
     // Create triangle cross element buffers.
     createEdgesInQuadArray();
@@ -205,7 +204,7 @@ void QuadSetTopologyContainer::createEdgeSetArray()
             // sort vertices in lexicographic order
             const Edge e = ((v1<v2) ? Edge(v1,v2) : Edge(v2,v1));
 
-            if(edgeMap.find(e) == edgeMap.end())
+            if(!edgeMap.contains(e))
             {
                 // edge not in edgeMap so create a new one
                 const EdgeID edgeIndex = (EdgeID)edgeMap.size();
@@ -482,7 +481,7 @@ bool QuadSetTopologyContainer::checkConnexity()
 
     if (elemAll.size() != nbr)
     {
-        msg_warning() << "CheckConnexity: Quads are missings. There is more than one connexe component.";
+        msg_warning() << "CheckConnexity: Quads are missing. There is more than one connexe component.";
         return false;
     }
 

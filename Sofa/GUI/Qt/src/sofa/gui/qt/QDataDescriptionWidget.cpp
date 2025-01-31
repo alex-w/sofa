@@ -48,6 +48,26 @@ void QDataDescriptionWidget::addRow(QGridLayout* grid, const std::string& title,
     grid->addWidget(tmplabel, row, 1, Qt::AlignTop);
 }
 
+void QDataDescriptionWidget::addRowHyperLink(QGridLayout* grid,
+    const std::string& title, const std::string& value, unsigned int row,
+    unsigned int minimumWidth)
+{
+    SOFA_UNUSED(minimumWidth);
+    QLabel* titlew = new QLabel(QString(title.c_str()));
+    grid->addWidget(titlew, row, 0, Qt::AlignTop);
+
+    QLabel* tmplabel = (new QLabel(QString(value.c_str())));
+    tmplabel->setMinimumWidth(20);
+    tmplabel->setWordWrap(true);
+    tmplabel->setAlignment(Qt::AlignTop);
+    tmplabel->setSizePolicy(QSizePolicy::MinimumExpanding,
+                            QSizePolicy::MinimumExpanding);
+    tmplabel->setTextFormat(Qt::RichText);
+    tmplabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    tmplabel->setOpenExternalLinks(true);
+    grid->addWidget(tmplabel, row, 1, Qt::AlignTop);
+}
+
 QDataDescriptionWidget::QDataDescriptionWidget(QWidget* parent, core::objectmodel::Base* object)
     :QWidget(parent)
 {
@@ -110,6 +130,12 @@ QDataDescriptionWidget::QDataDescriptionWidget(QWidget* parent, core::objectmode
             addRow(boxLayout, "Description", entry.description, nextRow, 20);
             nextRow++;
         }
+        if (!entry.documentationURL.empty() && entry.documentationURL != std::string("TODO"))
+        {
+            const std::string textURL = "<a href=\"" + entry.documentationURL + "\">" + entry.documentationURL + "</a>";
+            addRowHyperLink(boxLayout, "Documentation URL", textURL, nextRow, 20);
+            nextRow++;
+        }
         const core::ObjectFactory::CreatorMap::iterator it = entry.creatorMap.find(object->getTemplateName());
         if (it != entry.creatorMap.end() && *it->second->getTarget())
         {
@@ -148,7 +174,7 @@ QDataDescriptionWidget::QDataDescriptionWidget(QWidget* parent, core::objectmode
 
         box->setLayout(boxLayout);
 
-        box->setTitle(QString("Extra informations"));
+        box->setTitle(QString("Extra information"));
 
         unsigned int row = 0;
         for(const auto& data : selecteddatum)

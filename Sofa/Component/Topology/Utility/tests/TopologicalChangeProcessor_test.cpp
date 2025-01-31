@@ -23,7 +23,7 @@
 #include <sofa/component/topology/container/dynamic/TriangleSetTopologyContainer.h>
 #include <sofa/component/topology/container/dynamic//TetrahedronSetTopologyContainer.h>
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 #include <sofa/simulation/Node.h>
 
 using sofa::testing::BaseSimulationTest;
@@ -46,7 +46,7 @@ struct TopologicalChangeProcessor_test: public BaseSimulationTest
     std::string m_fileName = "";
 
     /// Method use at start to load the scene file    
-    void SetUp() override
+    void doSetUp() override
     {
         // Load the scene from the xml file
         const std::string filePath = std::string(SOFA_COMPONENT_TOPOLOGY_UTILITY_TEST_SCENES_DIR) + "/" + m_fileName;
@@ -68,7 +68,7 @@ struct TopologicalChangeProcessor_test: public BaseSimulationTest
     virtual bool testTopologyChanges() = 0;
 
     /// Unload the scene
-    void TearDown() override
+    void doTearDown() override
     {
         if (m_instance.root !=nullptr)
             sofa::simulation::node::unload(m_instance.root);
@@ -121,9 +121,9 @@ struct InciseProcessor_test : TopologicalChangeProcessor_test
             m_instance.simulate(0.05);
         }
 
-        EXPECT_EQ(topoCon->getNbTriangles(), 1680);
-        EXPECT_EQ(topoCon->getNbEdges(), 2710);
-        EXPECT_EQ(topoCon->getNbPoints(), 1029);
+        EXPECT_EQ(topoCon->getNbTriangles(), 1648);
+        EXPECT_EQ(topoCon->getNbEdges(), 2646);
+        EXPECT_EQ(topoCon->getNbPoints(), 997);
 
         return true;
     }

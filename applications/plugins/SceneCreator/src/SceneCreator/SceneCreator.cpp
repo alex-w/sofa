@@ -3,17 +3,17 @@
 *                    (c) 2006 INRIA, USTL, UJF, CNRS, MGH                     *
 *                                                                             *
 * This program is free software; you can redistribute it and/or modify it     *
-* under the terms of the GNU General Public License as published by the Free  *
-* Software Foundation; either version 2 of the License, or (at your option)   *
-* any later version.                                                          *
+* under the terms of the GNU Lesser General Public License as published by    *
+* the Free Software Foundation; either version 2.1 of the License, or (at     *
+* your option) any later version.                                             *
 *                                                                             *
 * This program is distributed in the hope that it will be useful, but WITHOUT *
 * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or       *
-* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for    *
-* more details.                                                               *
+* FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License *
+* for more details.                                                           *
 *                                                                             *
-* You should have received a copy of the GNU General Public License along     *
-* with this program. If not, see <http://www.gnu.org/licenses/>.              *
+* You should have received a copy of the GNU Lesser General Public License    *
+* along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *******************************************************************************
 * Authors: The SOFA Team and external contributors (see Authors.txt)          *
 *                                                                             *
@@ -21,6 +21,7 @@
 ******************************************************************************/
 #include "SceneCreator.h"
 #include <SceneCreator/config.h>
+#include <sofa/Modules.h>
 
 #include <sofa/simulation/Simulation.h>
 #include <sofa/simulation/graph/DAGSimulation.h>
@@ -33,14 +34,14 @@ using sofa::defaulttype::Vec3Types ;
 #include <sofa/helper/system/FileRepository.h>
 using sofa::helper::system::DataRepository ;
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 using sofa::simpleapi::str ;
 using sofa::simpleapi::createObject ;
 using sofa::simpleapi::createChild ;
 
-namespace sofa
+
+namespace sofa::modeling
 {
-namespace modeling {
 
 
 /////////////////// IMPORTING THE DEPENDENCIES INTO THE NAMESPACE ///////////////////////////
@@ -87,15 +88,15 @@ Node::SPtr  createEulerSolverNode(Node::SPtr parent, const std::string& name, co
 
     if (scheme == "Explicit")
     {
-        simpleapi::createObject(parent, "RequiredPlugin", {{"name", "Sofa.Component.ODESolver.Forward"}});
+        simpleapi::createObject(parent, "RequiredPlugin", {{"name", Sofa.Component.ODESolver.Forward}});
         simpleapi::createObject(node, "EulerExplicitSolver", {{"name","Euler Explicit"}});
         return node ;
     }
 
     if (scheme == "Implicit")
     {
-        simpleapi::createObject(parent, "RequiredPlugin", {{"name", "Sofa.Component.ODESolver.Backward"}});
-        simpleapi::createObject(parent, "RequiredPlugin", {{"name", "Sofa.Component.LinearSolver.Iterative"}});
+        simpleapi::createObject(parent, "RequiredPlugin", {{"name", Sofa.Component.ODESolver.Backward}});
+        simpleapi::createObject(parent, "RequiredPlugin", {{"name", Sofa.Component.LinearSolver.Iterative}});
         simpleapi::createObject(node, "EulerImplicitSolver", {{"name","Euler Implicit"},
                                                               {"rayleighStiffness","0.01"},
                                                               {"rayleighMass", "1.0"}}) ;
@@ -109,8 +110,8 @@ Node::SPtr  createEulerSolverNode(Node::SPtr parent, const std::string& name, co
 
     if (scheme == "Implicit_SparseLDL")
     {
-        simpleapi::createObject(parent, "RequiredPlugin", {{"name", "Sofa.Component.ODESolver.Backward"}});
-        simpleapi::createObject(parent, "RequiredPlugin", {{"name", "Sofa.Component.LinearSolver.Direct"}});
+        simpleapi::createObject(parent, "RequiredPlugin", {{"name", Sofa.Component.ODESolver.Backward}});
+        simpleapi::createObject(parent, "RequiredPlugin", {{"name", Sofa.Component.LinearSolver.Direct}});
         simpleapi::createObject(node, "EulerImplicitSolver", {{"name","Euler Implicit"},
                                                                 {"rayleighStiffness","0.01"},
                                                                 {"rayleighMass", "1.0"}}) ;
@@ -329,7 +330,7 @@ void addCollisionModels(Node::SPtr parent, const std::vector<std::string> &eleme
 
     for (auto& element : elements)
     {
-        if( alias.find(element) == alias.end() )
+        if(!alias.contains(element))
         {
             msg_error(parent.get()) << "Unable to create collision model from '"<< element << "'" ;
             continue;
@@ -378,7 +379,7 @@ simulation::Node::SPtr addCube(simulation::Node::SPtr parent, const std::string&
                                const Deriv3& translation, const Deriv3 &rotation, const Deriv3 &scale)
 {
     //TODO(dmarchal): It is unclear to me if this message should be a msg_ (for end user)
-    // or dmsg_ for developpers.
+    // or dmsg_ for developers.
     if (parent == nullptr){
         msg_warning("SceneCreator") << "Parent node is nullptr. Returning Null Pointer." ;
         return nullptr;
@@ -449,7 +450,7 @@ simulation::Node::SPtr addCylinder(simulation::Node::SPtr parent, const std::str
                                    const Deriv3& translation, const Deriv3 &rotation, const Deriv3 &scale)
 {
     //TODO(dmarchal): It is unclear to me if this message should be a msg_ (for end user)
-    // or dmsg_ for developpers.
+    // or dmsg_ for developers.
     if (parent == nullptr){
         msg_warning("SceneCreator") << "Warning: parent node is nullptr. Returning Null Pointer." ;
         return nullptr;
@@ -513,7 +514,7 @@ simulation::Node::SPtr addSphere(simulation::Node::SPtr parent, const std::strin
                                  const Deriv3& translation, const Deriv3 &rotation, const Deriv3 &scale)
 {
     //TODO(dmarchal): It is unclear to me if this message should be a msg_ (for end user)
-    // or dmsg_ for developpers.
+    // or dmsg_ for developers.
     if (parent == nullptr){
         msg_warning("SceneCreator") << "Warning: parent node is nullptr. Returning Null Pointer." ;
         return nullptr;
@@ -573,7 +574,7 @@ simulation::Node::SPtr addPlane(simulation::Node::SPtr parent, const std::string
                                 const Deriv3& translation, const Deriv3 &rotation, const Deriv3 &scale)
 {
     //TODO(dmarchal): It is unclear to me if this message should be a msg_ (for end user)
-    // or dmsg_ for developpers.
+    // or dmsg_ for developers.
     if (parent == nullptr){
         msg_warning("SceneCreator") << " Parent node is nullptr. Returning Null Pointer." ;
         return nullptr;
@@ -669,7 +670,7 @@ Node::SPtr massSpringString(Node::SPtr parent,
                                 {"name",oss.str()+"_mass"},
                                 {"vertexMass", str(totalMass/numParticles)}});
 
-    simpleapi::createObject(node, "StiffSpringForceField", {
+    simpleapi::createObject(node, "SpringForceField", {
                                 {"name", oss.str()+"_spring"},
                                 {"spring", springs.str()}
                             });
@@ -712,8 +713,4 @@ void setDataLink(BaseData* source, BaseData* target)
 
 
 
-} // modeling
-
-
-
-} // sofa
+}

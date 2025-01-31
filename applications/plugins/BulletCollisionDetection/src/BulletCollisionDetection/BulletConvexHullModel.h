@@ -143,7 +143,7 @@ public:
     Data<VecCoord> CHPoints; ///< points defining the convex hull
     Data<bool> computeNormals; ///< set to false to disable computation of triangles normal
     Data<bool> positionDefined; ///< set to true if the collision model position is defined in the mechanical object
-    Data<SReal> concavityThreeshold; ///< Threeshold used in the decomposition
+    Data<SReal> concavityThreeshold; ///< Threshold used in the decomposition
 protected:
     void draw_without_decomposition(const core::visual::VisualParams* vparams);
     void draw_decomposition(const core::visual::VisualParams* vparams);
@@ -160,9 +160,9 @@ protected:
 
     sofa::core::topology::BaseMeshTopology* bmsh;
 
-    std::vector<std::vector< type::Vector3 > > _ch_deco_pts;//convex hull decomposition triangles, used only for drawing convex hulls
+    std::vector<std::vector< type::Vec3 > > _ch_deco_pts;//convex hull decomposition triangles, used only for drawing convex hulls
     std::vector<std::vector< sofa::type::Vec<3,int> > > _ch_deco_tri;
-    std::vector<std::vector< type::Vector3 > > _ch_deco_norms;
+    std::vector<std::vector< type::Vec3 > > _ch_deco_norms;
 
     std::vector<type::Vec<4,float> > _ch_deco_colors;
 

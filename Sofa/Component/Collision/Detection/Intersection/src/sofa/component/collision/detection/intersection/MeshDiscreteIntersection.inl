@@ -29,8 +29,10 @@ namespace sofa::component::collision::detection::intersection
 
 
 template<class T>
-bool MeshDiscreteIntersection::testIntersection(collision::geometry::TSphere<T>& sph, collision::geometry::Triangle& triangle)
+bool MeshDiscreteIntersection::testIntersection(collision::geometry::TSphere<T>& sph, collision::geometry::Triangle& triangle, const core::collision::Intersection* currentIntersection)
 {
+    SOFA_UNUSED(currentIntersection);
+
     const double EPSILON = 0.00001;
     //Vertices of the triangle:
     const type::Vec3 p0 = triangle.p1();
@@ -80,8 +82,10 @@ bool MeshDiscreteIntersection::testIntersection(collision::geometry::TSphere<T>&
 }
 
 template<class T>
-int MeshDiscreteIntersection::computeIntersection(collision::geometry::TSphere<T>& sph, collision::geometry::Triangle& triangle, OutputVector* contacts)
+int MeshDiscreteIntersection::computeIntersection(collision::geometry::TSphere<T>& sph, collision::geometry::Triangle& triangle, OutputVector* contacts, const core::collision::Intersection* currentIntersection)
 {
+    SOFA_UNUSED(currentIntersection);
+
     const double EPSILON = 0.00001;
     //Vertices of the triangle:
     const type::Vec3 p0 = triangle.p1();
@@ -119,7 +123,7 @@ int MeshDiscreteIntersection::computeIntersection(collision::geometry::TSphere<T
     }
 
     //However, if the plane has intersected the sphere, then it is
-    //neccesary to check if the proyected point "projPoint" is inside
+    //necessary to check if the proyected point "projPoint" is inside
     //the triangle.
 #define SAMESIDE(ap1,ap2,ap3,ap4) (((cross((ap4-ap3),(ap1-ap3))) * (cross((ap4-ap3),(ap2-ap3)))) >= 0)
     if ( (SAMESIDE(projPoint,p0,p1,p2) && SAMESIDE(projPoint,p1,p0,p2) && SAMESIDE(projPoint,p2,p0,p1)))

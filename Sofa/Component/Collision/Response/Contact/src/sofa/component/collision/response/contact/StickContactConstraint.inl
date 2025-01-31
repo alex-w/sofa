@@ -44,11 +44,12 @@ StickContactConstraint<TCollisionModel1,TCollisionModel2>::StickContactConstrain
     , intersectionMethod(intersectionMethod)
     , m_constraint(nullptr)
     , parent(nullptr)
-    , f_keepAlive(initData(&f_keepAlive, true, "keepAlive", "set to true to keep this contact alive even after collisions are no longer detected"))
+    , d_keepAlive(initData(&d_keepAlive, true, "keepAlive", "set to true to keep this contact alive even after collisions are no longer detected"))
 {
     mapper1.setCollisionModel(model1);
     mapper2.setCollisionModel(model2);
     this->f_printLog.setValue(true);
+    f_keepAlive.setOriginalData(&d_keepAlive);
 }
 
 template < class TCollisionModel1, class TCollisionModel2 >
@@ -128,7 +129,7 @@ void StickContactConstraint<TCollisionModel1,TCollisionModel2>::activateMappers(
         msg_info() << "Creating StickContactConstraint bilateral constraints";
         MechanicalState1* mstate1 = mapper1.createMapping(mapper::GenerateStringID::generate().c_str());
         MechanicalState2* mstate2 = mapper2.createMapping(mapper::GenerateStringID::generate().c_str());
-        m_constraint = sofa::core::objectmodel::New<constraint::lagrangian::model::BilateralInteractionConstraint<defaulttype::Vec3Types> >(mstate1, mstate2);
+        m_constraint = sofa::core::objectmodel::New<constraint::lagrangian::model::BilateralLagrangianConstraint<defaulttype::Vec3Types> >(mstate1, mstate2);
         m_constraint->setName( getName() );
     }
 
@@ -172,8 +173,8 @@ void StickContactConstraint<TCollisionModel1,TCollisionModel2>::activateMappers(
     mapper2.updateXfree();
 
     msg_info() << contacts.size() << " StickContactConstraint created";
-    msg_info() << "mstate1 size = " << m_constraint->getMState1()->getSize() << " x = " << m_constraint->getMState1()->getSize() << " xfree = " << m_constraint->getMState1()->read(core::ConstVecCoordId::freePosition())->getValue().size();
-    msg_info() << "mstate2 size = " << m_constraint->getMState2()->getSize() << " x = " << m_constraint->getMState2()->getSize() << " xfree = " << m_constraint->getMState2()->read(core::ConstVecCoordId::freePosition())->getValue().size();
+    msg_info() << "mstate1 size = " << m_constraint->getMState1()->getSize() << " x = " << m_constraint->getMState1()->getSize() << " xfree = " << m_constraint->getMState1()->read(core::vec_id::read_access::freePosition)->getValue().size();
+    msg_info() << "mstate2 size = " << m_constraint->getMState2()->getSize() << " x = " << m_constraint->getMState2()->getSize() << " xfree = " << m_constraint->getMState2()->read(core::vec_id::read_access::freePosition)->getValue().size();
 
 }
 

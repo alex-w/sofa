@@ -46,7 +46,7 @@ template <class Object>
 struct InstrumentedObject : public Object
 {
     InstrumentedObject()  { objectCounter++; }
-    ~InstrumentedObject() { objectCounter--; }
+    ~InstrumentedObject() override { objectCounter--; }
 };
 
 /// Component with a sub-component
@@ -222,7 +222,11 @@ protected:
 
         root = simulation::getSimulation()->createNewGraph("root");
         root->addObject(core::objectmodel::New<InstrumentedObject<MechanicalObject3> >());
-        root->addObject(core::objectmodel::New<InstrumentedObject<UniformMass3> >());
+
+        typename UniformMass3::SPtr uniformMass = core::objectmodel::New<InstrumentedObject<UniformMass3>>();
+        uniformMass->d_totalMass.setValue(1.0);
+        root->addObject(uniformMass);
+
         const simulation::Node::SPtr child  = simulation::getSimulation()->createNewNode("child");
         root->addChild(child);
         child->addObject(core::objectmodel::New<InstrumentedObject<MechanicalObject3> >());

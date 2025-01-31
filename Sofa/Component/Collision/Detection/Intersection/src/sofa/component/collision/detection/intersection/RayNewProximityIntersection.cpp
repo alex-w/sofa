@@ -39,8 +39,7 @@ using namespace sofa::component::collision::geometry;
 
 IntersectorCreator<NewProximityIntersection, RayNewProximityIntersection> RayNewProximityIntersectors("Ray");
 
-RayNewProximityIntersection::RayNewProximityIntersection(NewProximityIntersection* object, bool addSelf)
-    : intersection(object)
+RayNewProximityIntersection::RayNewProximityIntersection(NewProximityIntersection* intersection, bool addSelf)
 {
     if (addSelf)
     {
@@ -54,10 +53,10 @@ RayNewProximityIntersection::RayNewProximityIntersection(NewProximityIntersectio
     }
 }
 
-bool RayNewProximityIntersection::testIntersection(Ray &t1,Triangle &t2)
+bool RayNewProximityIntersection::testIntersection(Ray &t1,Triangle &t2, const core::collision::Intersection* currentIntersection)
 {
     Vec3 P,Q,PQ;
-    const SReal alarmDist = intersection->getAlarmDistance() + t1.getProximity() + t2.getProximity();
+    const SReal alarmDist = currentIntersection->getAlarmDistance() + t1.getProximity() + t2.getProximity();
 
     if (fabs(t2.n() * t1.direction()) < 0.000001)
         return false; // no intersection for edges parallel to the triangle
@@ -80,9 +79,9 @@ bool RayNewProximityIntersection::testIntersection(Ray &t1,Triangle &t2)
 }
 
 
-int RayNewProximityIntersection::computeIntersection(Ray &t1, Triangle &t2, OutputVector* contacts)
+int RayNewProximityIntersection::computeIntersection(Ray &t1, Triangle &t2, OutputVector* contacts, const core::collision::Intersection* currentIntersection)
 {
-    const SReal alarmDist = intersection->getAlarmDistance() + t1.getProximity() + t2.getProximity();
+    const SReal alarmDist = currentIntersection->getAlarmDistance() + t1.getProximity() + t2.getProximity();
 
     if (fabs(t2.n() * t1.direction()) < 0.000001)
         return false; // no intersection for edges parallel to the triangle
@@ -121,14 +120,18 @@ int RayNewProximityIntersection::computeIntersection(Ray &t1, Triangle &t2, Outp
 
 
 
-bool RayNewProximityIntersection::testIntersection( Ray& /*rRay*/, RigidSphere&)
+bool RayNewProximityIntersection::testIntersection( Ray& /*rRay*/, RigidSphere&, const core::collision::Intersection* currentIntersection)
 {
+    SOFA_UNUSED(currentIntersection);
+
     return false;
 }
 
 
-int RayNewProximityIntersection::computeIntersection(Ray& rRay, RigidSphere& rSphere, OutputVector* contacts)
+int RayNewProximityIntersection::computeIntersection(Ray& rRay, RigidSphere& rSphere, OutputVector* contacts, const core::collision::Intersection* currentIntersection)
 {
+    SOFA_UNUSED(currentIntersection);
+
     const Vec3 v3SphereCenter = rSphere.center( );
     const SReal fSphereRadii = rSphere.r();
 
@@ -240,13 +243,8 @@ int RayNewProximityIntersection::computeIntersection(Ray& rRay, RigidSphere& rSp
         }
     }
 
-
-
-
-
     return iHit;
 
 }
-
 
 } //namespace sofa::component::collision::detection::intersection

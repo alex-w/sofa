@@ -24,6 +24,8 @@
 
 #include <sofa/core/behavior/ForceField.h>
 
+#include <sofa/core/objectmodel/lifecycle/RenamedData.h>
+
 namespace sofa::component::mechanicalload
 {
 
@@ -46,8 +48,11 @@ public:
     typedef core::objectmodel::Data<VecCoord> DataVecCoord;
     typedef core::objectmodel::Data<VecDeriv> DataVecDeriv;
 
+    SOFA_ATTRIBUTE_DEPRECATED__RENAME_DATA_IN_MECHANICALLOAD()
+    sofa::core::objectmodel::lifecycle::RenamedData< Real > dampingCoefficient;
+
     /// air drag coefficient.
-    Data< Real > dampingCoefficient;
+    Data< Real > d_dampingCoefficient;
     Data<bool> d_implicit; ///< should it generate damping matrix df/dv? (explicit otherwise, i.e. only generating a force)
 
 protected:
@@ -72,7 +77,7 @@ public:
 
 
 
-#if  !defined(SOFA_COMPONENT_FORCEFIELD_UNIFORMVELOCITYDAMPINGFORCEFIELD_CPP)
+#if !defined(SOFA_COMPONENT_FORCEFIELD_UNIFORMVELOCITYDAMPINGFORCEFIELD_CPP)
 extern template class SOFA_COMPONENT_MECHANICALLOAD_API UniformVelocityDampingForceField<defaulttype::Vec3Types>;
 extern template class SOFA_COMPONENT_MECHANICALLOAD_API UniformVelocityDampingForceField<defaulttype::Vec2Types>;
 extern template class SOFA_COMPONENT_MECHANICALLOAD_API UniformVelocityDampingForceField<defaulttype::Vec1Types>;

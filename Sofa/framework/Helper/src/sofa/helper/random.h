@@ -24,10 +24,8 @@
 
 #include <cstdlib>
 
-namespace sofa
-{
 
-namespace helper
+namespace sofa::helper
 {
 
 /** Define random methods srand and rand for double and int used only for the tests now.
@@ -67,7 +65,7 @@ inline double drand(double max)
 }
 
 // Random double in [-max,-min] U [min,max]
-// min and max must be positve
+// min and max must be positive
 inline double drand(double min, double max)
 {
    assert( max >= 0 );
@@ -79,8 +77,7 @@ inline double drand(double min, double max)
 }
 
 
-} // namespace helper
+} // namespace sofa::helper
 
-} // namespace sofa
 
 #endif // SOFA_HELPER_RANDOM_H

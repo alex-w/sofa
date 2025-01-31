@@ -43,7 +43,8 @@ public:
     }
 
     /// Inherited from FileEventListener
-    void fileHasChanged(const std::string& filename){
+    void fileHasChanged(const std::string& filename) override
+    {
         /// We are recompiling & re-initializing all the shaders...
         /// If this become a bottleneck we can do finer grain updates to
         /// speed up the thing.
@@ -315,8 +316,8 @@ void GLSLShader::InitShaders()
     // Make sure the user passed in at least a vertex and fragment shader file
     if( !GetVertexShaderFileName().length() || !GetFragmentShaderFileName().length() )
     {
-        if(m_hShaderContents.find(GL_VERTEX_SHADER_ARB) == m_hShaderContents.end()
-            || m_hShaderContents.find(GL_FRAGMENT_SHADER_ARB) == m_hShaderContents.end())
+        if(!m_hShaderContents.contains(GL_VERTEX_SHADER_ARB)
+           || !m_hShaderContents.contains(GL_FRAGMENT_SHADER_ARB))
         {
             msg_error() << "GLSLShader requires setting a VertexShader and a FragmentShader";
             return;

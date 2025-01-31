@@ -3,17 +3,17 @@
 *                    (c) 2006 INRIA, USTL, UJF, CNRS, MGH                     *
 *                                                                             *
 * This program is free software; you can redistribute it and/or modify it     *
-* under the terms of the GNU General Public License as published by the Free  *
-* Software Foundation; either version 2 of the License, or (at your option)   *
-* any later version.                                                          *
+* under the terms of the GNU Lesser General Public License as published by    *
+* the Free Software Foundation; either version 2.1 of the License, or (at     *
+* your option) any later version.                                             *
 *                                                                             *
 * This program is distributed in the hope that it will be useful, but WITHOUT *
 * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or       *
-* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for    *
-* more details.                                                               *
+* FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License *
+* for more details.                                                           *
 *                                                                             *
-* You should have received a copy of the GNU General Public License along     *
-* with this program. If not, see <http://www.gnu.org/licenses/>.              *
+* You should have received a copy of the GNU Lesser General Public License    *
+* along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *******************************************************************************
 * Authors: The SOFA Team and external contributors (see Authors.txt)          *
 *                                                                             *
@@ -53,13 +53,15 @@ using sofa::core::objectmodel::BaseContext;
 #include <sofa/simulation/Simulation.h>
 using sofa::simulation::Node;
 
+#include <sofa/simpleapi/SimpleApi.h>
+
 class SceneCreator_test : public BaseSimulationTest
 {
 public:
-    void SetUp() override
+    void doSetUp() override
     {
-        importPlugin("Sofa.Component");
-        importPlugin("Sofa.GL.Component.Rendering3D");
+        sofa::simpleapi::importPlugin(Sofa.Component);
+        sofa::simpleapi::importPlugin(Sofa.GL.Component.Rendering3D);
     }
 
     bool createCubeFailed();
@@ -113,7 +115,7 @@ bool SceneCreator_test::createCubeFailed()
 bool SceneCreator_test::createCubeSuccess()
 {
     // Create cube
-    const SReal poissonRatio = 0.45;
+    constexpr SReal poissonRatio = 0.45;
     const Node::SPtr root = sofa::modeling::createRootWithCollisionPipeline();
     const Node::SPtr node = sofa::modeling::addCube(root, "cubeFEM",
                                                     Vec3Types::Deriv(5, 5, 5),
@@ -143,8 +145,8 @@ bool SceneCreator_test::createCubeSuccess()
     node->get<TetrahedronFEMForceField3>(&FEMs, BaseContext::SearchDown);
     EXPECT_EQ(grids.size(), 1u);
 
-    const TetrahedronFEMForceField3* fem = FEMs[0];
-    EXPECT_EQ(fem->_poissonRatio.getValue(), poissonRatio);
+    TetrahedronFEMForceField3* fem = FEMs[0];
+    EXPECT_EQ(fem->getPoissonRatioInElement(0), poissonRatio);
 
     return true;
 }
@@ -212,7 +214,7 @@ bool SceneCreator_test::createCylinderFailed()
 bool SceneCreator_test::createCylinderSuccess()
 {
     // Create cylinder
-    const SReal poissonRatio = 0.45;
+    constexpr SReal poissonRatio = 0.45;
     const Node::SPtr root = sofa::modeling::createRootWithCollisionPipeline();
     const Node::SPtr node = sofa::modeling::addCylinder(root, "cylinderFEM_1",
                                                         Vec3Types::Deriv(5, 5, 5),
@@ -243,8 +245,8 @@ bool SceneCreator_test::createCylinderSuccess()
     node->get<TetrahedronFEMForceField3>(&FEMs, BaseContext::SearchDown);
     EXPECT_EQ(grids.size(), 1u);
 
-    const TetrahedronFEMForceField3* fem = FEMs[0];
-    EXPECT_EQ(fem->_poissonRatio.getValue(), poissonRatio);
+    TetrahedronFEMForceField3* fem = FEMs[0];
+    EXPECT_EQ(fem->getPoissonRatioInElement(0), poissonRatio);
 
     return true;
 }
@@ -311,7 +313,7 @@ bool SceneCreator_test::createSphereFailed()
 bool SceneCreator_test::createSphereSuccess()
 {
     // Create Sphere
-    const SReal poissonRatio = 0.45;
+    constexpr SReal poissonRatio = 0.45;
     const sofa::simulation::Node::SPtr root = sofa::modeling::createRootWithCollisionPipeline();
     const sofa::simulation::Node::SPtr node = sofa::modeling::addSphere(root, "SphereFEM_1", sofa::defaulttype::Vec3Types::Deriv(5, 5, 5),
                                                                         sofa::defaulttype::Vec3Types::Deriv(0, 1, 0), 1.0,
@@ -341,8 +343,8 @@ bool SceneCreator_test::createSphereSuccess()
     node->get<TetrahedronFEMForceField3>(&FEMs, sofa::core::objectmodel::BaseContext::SearchDown);
     EXPECT_EQ(grids.size(), (size_t)1);
 
-    const TetrahedronFEMForceField3* fem = FEMs[0];
-    EXPECT_EQ(fem->_poissonRatio.getValue(), poissonRatio);
+    TetrahedronFEMForceField3* fem = FEMs[0];
+    EXPECT_EQ(fem->getPoissonRatioInElement(0), poissonRatio);
 
     return true;
 }

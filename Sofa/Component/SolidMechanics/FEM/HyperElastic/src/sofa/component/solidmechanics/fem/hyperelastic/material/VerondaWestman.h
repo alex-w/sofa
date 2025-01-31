@@ -31,7 +31,7 @@
 
 namespace sofa::component::solidmechanics::fem::hyperelastic::material
 {
-/** a Class that describe a generic hyperelastic material : exemple of Boyce and Arruda
+/** a Class that describe a generic hyperelastic material : example of Boyce and Arruda
 The material is described based on continuum mechanics and the description is independent
 to any discretization method like the finite element method.
 A material is generically described by a strain energy function and its first and second derivatives.
@@ -40,6 +40,9 @@ the determinant of the deformation gradient J and the right Cauchy Green deforma
 template <class DataTypes>
 class VerondaWestman : public HyperelasticMaterial<DataTypes>
 {
+public:
+    static constexpr std::string_view Name = "VerondaWestman";
+
     typedef typename DataTypes::Coord::value_type Real;
     typedef type::Mat<3, 3, Real> Matrix3;
     typedef type::Mat<6, 6, Real> Matrix6;

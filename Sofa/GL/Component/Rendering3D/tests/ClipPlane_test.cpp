@@ -45,7 +45,7 @@ using sofa::core::execparams::defaultInstance;
 #include <sofa/helper/BackTrace.h>
 using sofa::helper::BackTrace ;
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 
 namespace cliplane_test
 {
@@ -60,10 +60,10 @@ int messageInited = initMessage();
 
 class TestClipPlane : public BaseTest {
 public:
-    void SetUp() override
+    void doSetUp() override
     {
-        sofa::simpleapi::importPlugin("Sofa.GL.Component.Rendering3D");
-        sofa::simpleapi::importPlugin("Sofa.Component.StateContainer");
+        sofa::simpleapi::importPlugin(Sofa.GL.Component.Rendering3D);
+        sofa::simpleapi::importPlugin(Sofa.Component.StateContainer);
     }
 
     void checkClipPlaneValidAttributes();

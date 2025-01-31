@@ -46,7 +46,7 @@ using sofa::simulation::Node ;
 #include <sofa/simulation/Simulation.h>
 #include <sofa/simulation/graph/DAGSimulation.h>
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 
 #include <sofa/simulation/common/SceneLoaderXML.h>
 using sofa::simulation::SceneLoaderXML ;
@@ -96,17 +96,18 @@ public:
     typename MechanicalObject<DataTypes>::SPtr mstate;
     typename DiagonalMass<DataTypes>::SPtr mass;
 
-    void SetUp() override
+    void doSetUp() override
     {
-        sofa::simpleapi::importPlugin("Sofa.Component.Topology.Container.Dynamic");
-        sofa::simpleapi::importPlugin("Sofa.Component.Topology.Container.Grid");
-        sofa::simpleapi::importPlugin("Sofa.Component.StateContainer");
+        sofa::simpleapi::importPlugin(Sofa.Component.Topology.Container.Dynamic);
+        sofa::simpleapi::importPlugin(Sofa.Component.Topology.Container.Grid);
+        sofa::simpleapi::importPlugin(Sofa.Component.StateContainer);
+        sofa::simpleapi::importPlugin(Sofa.Component.Mass);
 
         simulation = simulation::getSimulation();
         root = simulation::getSimulation()->createNewGraph("root");
     }
 
-    void TearDown() override
+    void doTearDown() override
     {
         if (root!=nullptr)
             sofa::simulation::node::unload(root);
@@ -155,7 +156,7 @@ public:
                 "<?xml version='1.0'?>"
                 "<Node 	name='Root' gravity='0 0 0' time='0' animate='0'   > "
                 "    <MechanicalObject />                                                                       "
-                "    <RegularGrid nx='2' ny='2' nz='2' xmin='0' xmax='2' ymin='0' ymax='2' zmin='0' zmax='2' /> "
+                "    <RegularGridTopology nx='2' ny='2' nz='2' xmin='0' xmax='2' ymin='0' ymax='2' zmin='0' zmax='2' /> "
                 "    <HexahedronSetGeometryAlgorithms />                                                        "
                 "   <DiagonalMass name='m_mass'/>                            "
                 "</Node>                                                     " ;
@@ -188,7 +189,7 @@ public:
                 "<?xml version='1.0'?>                                                                          "
                 "<Node  name='Root' gravity='0 0 0' time='0' animate='0'   >                                    "
                 "    <MechanicalObject />                                                                       "
-                "    <RegularGrid nx='2' ny='2' nz='2' xmin='0' xmax='2' ymin='0' ymax='2' zmin='0' zmax='2' /> "
+                "    <RegularGridTopology nx='2' ny='2' nz='2' xmin='0' xmax='2' ymin='0' ymax='2' zmin='0' zmax='2' /> "
                 "    <HexahedronSetGeometryAlgorithms />                                                        "
                 "    <DiagonalMass name='m_mass' massDensity='1.0' />                                           "
                 "</Node>                                                                                        " ;
@@ -219,7 +220,7 @@ public:
                 "<?xml version='1.0'?>                                                                          "
                 "<Node  name='Root' gravity='0 0 0' time='0' animate='0'   >                                    "
                 "    <MechanicalObject />                                                                       "
-                "    <RegularGrid nx='2' ny='2' nz='2' xmin='0' xmax='2' ymin='0' ymax='2' zmin='0' zmax='2' /> "
+                "    <RegularGridTopology nx='2' ny='2' nz='2' xmin='0' xmax='2' ymin='0' ymax='2' zmin='0' zmax='2' /> "
                 "    <HexahedronSetGeometryAlgorithms/>                                                         "
                 "    <DiagonalMass name='m_mass' totalMass='10'/>                                               "
                 "</Node>                                                                                        " ;
@@ -249,7 +250,7 @@ public:
                 "<?xml version='1.0'?>                                                                          "
                 "<Node  name='Root' gravity='0 0 0' time='0' animate='0'   >                                    "
                 "    <MechanicalObject />                                                                       "
-                "    <RegularGrid nx='2' ny='2' nz='2' xmin='0' xmax='2' ymin='0' ymax='2' zmin='0' zmax='2' /> "
+                "    <RegularGridTopology nx='2' ny='2' nz='2' xmin='0' xmax='2' ymin='0' ymax='2' zmin='0' zmax='2' /> "
                 "    <HexahedronSetGeometryAlgorithms />                                                        "
                 "    <DiagonalMass name='m_mass' massDensity='1.0' totalMass='10'/>                             "
                 "</Node>                                                                                        " ;

@@ -21,7 +21,7 @@
 ******************************************************************************/
 #pragma once
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 
 #include <sofa/testing/NumericTest.h>
 #include <sofa/simulation/Node.h>
@@ -50,7 +50,7 @@ inline simulation::Node::SPtr createMassSpringSystem(
         { "velocity", vFixedPoint},
     });
 
-    simpleapi::createObject(fixedPointNode, "FixedConstraint", {
+    simpleapi::createObject(fixedPointNode, "FixedProjectiveConstraint", {
         { "name","fixed"},
         { "indices", "0"},
     });
@@ -74,7 +74,7 @@ inline simulation::Node::SPtr createMassSpringSystem(
     oss << 0 << " " << 0 << " " << stiffness << " " << 0 << " " << restLength;
 
     // attach a spring
-    simpleapi::createObject(root, "StiffSpringForceField", {
+    simpleapi::createObject(root, "SpringForceField", {
         { "name","ff"},
         { "spring", oss.str()},
         { "object1", "@FixedPointNode/fixedPoint"},

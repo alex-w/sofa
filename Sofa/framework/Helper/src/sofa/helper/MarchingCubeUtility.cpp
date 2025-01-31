@@ -469,9 +469,9 @@ namespace sofa::helper
 
     /*
     Given a grid cell and an isolevel, calculate the triangular
-    facets required to represent the isosurface through the cell.
-    Return the number of triangular facets, the array "triangles"
-    will be loaded up with the vertices at most 5 triangular facets.
+    d_facets required to represent the isosurface through the cell.
+    Return the number of triangular d_facets, the array "triangles"
+    will be loaded up with the vertices at most 5 triangular d_facets.
     0 will be returned if the grid cell is either totally above
     of totally below the isolevel.
     */
@@ -599,7 +599,7 @@ namespace sofa::helper
             cubeCoord = cubesToGenerate.top(); // Get the last cube on the stack.
             cubesToGenerate.pop();             // Remove it from the stack.
 
-            if ( generatedCubes.find ( cubeCoord ) != generatedCubes.end() ) continue;
+            if ( generatedCubes.contains ( cubeCoord )) continue;
 
             GridCell cell;
             initCell ( cell, cubeCoord, data, gridStep, dataGridStep );
@@ -633,7 +633,7 @@ namespace sofa::helper
                                     type::vector< type::vector<unsigned int> >*triangleIndexInRegularGrid,
                                     bool propagate ) const
     {
-        //    Vec3i gridSize = Vec3i ( dataResolution[0]/cubeStep, dataResolution[1]/cubeStep, dataResolution[2]/cubeStep );
+        //    Vec3i gridSize = Vec3i ( d_dataResolution[0]/cubeStep, d_dataResolution[1]/cubeStep, d_dataResolution[2]/cubeStep );
         std::set<type::Vec3i> generatedCubes;
 
         const size_t datasize = dataResolution[0]*dataResolution[1]*dataResolution[2];
@@ -766,7 +766,7 @@ namespace sofa::helper
     // A priori, il n'y a pas de données sur les bords (tout du moins sur le premier voxel)
     void MarchingCubeUtility::findSeeds ( vector<type::Vec3i>& seeds, const float isoValue, unsigned char *_data )
     {
-        msg_info() << "findSeeds(). Begining." ;
+        msg_info() << "findSeeds(). Beginning." ;
 
         std::set<unsigned int> parsedVoxels;
         const size_t datasize = dataResolution[0]*dataResolution[1]*dataResolution[2];
@@ -800,7 +800,7 @@ namespace sofa::helper
                     if ( data[index] >= isoValue)
                     {
                         type::Vec3i currentCube ( i, j , k );
-                        if ( parsedVoxels.find ( index ) == parsedVoxels.end() )
+                        if (!parsedVoxels.contains ( index ))
                         {
                             seeds.push_back ( currentCube - type::Vec3 ( 1_sreal, 0_sreal, 0_sreal ) );
                             // propager sur les autres voxels et les incrire ds parsedVoxels.
@@ -890,7 +890,7 @@ namespace sofa::helper
 
             const int index = coord[0] + coord[1]*dataResolution[0] + coord[2]*dataResolution[0]*dataResolution[1];
 
-            if ( connectedVoxels.find ( index ) != connectedVoxels.end() ) continue;
+            if ( connectedVoxels.contains ( index )) continue;
 
             if ( data[index] < isoValue ) continue;
 

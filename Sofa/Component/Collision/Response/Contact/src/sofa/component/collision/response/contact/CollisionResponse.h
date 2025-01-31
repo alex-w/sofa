@@ -27,6 +27,7 @@
 #include <sofa/helper/OptionsGroup.h>
 #include <sofa/helper/map_ptr_stable_compare.h>
 
+#include <sofa/core/objectmodel/lifecycle/RenamedData.h>
 
 namespace sofa::component::collision::response::contact
 {
@@ -36,8 +37,15 @@ class SOFA_COMPONENT_COLLISION_RESPONSE_CONTACT_API CollisionResponse : public c
 public :
     SOFA_CLASS(CollisionResponse,sofa::core::collision::ContactManager);
 
-    Data<sofa::helper::OptionsGroup> response; ///< contact response class
-    Data<std::string> responseParams; ///< contact response parameters (syntax: name1=value1    Data<std::string> responseParams;name2=value2    Data<std::string> responseParams;...)
+    SOFA_ATTRIBUTE_DEPRECATED__RENAME_DATA_IN_COLLISION_RESPONSE_CONTACT()
+    sofa::core::objectmodel::lifecycle::RenamedData<sofa::helper::OptionsGroup> response;
+
+    SOFA_ATTRIBUTE_DEPRECATED__RENAME_DATA_IN_COLLISION_RESPONSE_CONTACT()
+    sofa::core::objectmodel::lifecycle::RenamedData<std::string> responseParams;
+
+
+    Data<sofa::helper::OptionsGroup> d_response; ///< contact response class
+    Data<std::string> d_responseParams; ///< contact response parameters (syntax: name1=value1&name2=value2&...)
 
     /// outputsVec fixes the reproducibility problems by storing contacts in the collision detection saved order
     /// if not given, it is still working but with eventual reproducibility problems
@@ -53,13 +61,13 @@ public :
         {
             context->addObject(obj);
             sofa::helper::OptionsGroup options = initializeResponseOptions(context);
-            obj->response.setValue(options);
+            obj->d_response.setValue(options);
         }
 
         if (arg)
             obj->parse(arg);
 
-        //SOFA_ATTRIBUTE_DISABLED("v21.12 (PR#2522)", "v23.06","This attribute was only added to build a compatibility layer on the response name.")
+        //SOFA_ATTRIBUTE_DISABLED("v21.12 (PR#2522)", "v24.06","This attribute was only added to build a compatibility layer on the response name.")
         {
             static const std::map<std::string,std::string> renamingResponseMethod = {
                 {"ray", "RayContact"},
@@ -80,7 +88,7 @@ public :
                     << "Use \"" << it->second << "\" instead.";
             }
         }
-
+        
         return obj;
     }
 
@@ -98,7 +106,7 @@ public :
 
     void setDefaultResponseType(const std::string &responseT);
 
-    std::string getDefaultResponseType() const { return response.getValue().getSelectedItem(); }
+    std::string getDefaultResponseType() const { return d_response.getValue().getSelectedItem(); }
 
 protected:
     typedef sofa::helper::map_ptr_stable_compare<

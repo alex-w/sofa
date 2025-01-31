@@ -29,10 +29,8 @@
 #include <sofa/simulation/config.h>
 #include <sofa/simulation/Node.h>
 
-namespace sofa
-{
 
-namespace simulation
+namespace sofa::simulation
 {
 
 
@@ -43,7 +41,7 @@ namespace simulation
  *  This class can optionally replace the default computation scheme of computing
  *  collisions then doing an integration step.
  *
- *  Note that it is in a preliminary stage, hence its fonctionnalities and API will
+ *  Note that it is in a preliminary stage, hence its functionalities and API will
  *  certainly change soon.
  *
  */
@@ -86,8 +84,7 @@ protected:
     const Solvers& getSolverSequence();
 };
 
-} // namespace simulation
+} // namespace sofa::simulation
 
-} // namespace sofa
 
 #endif /* SOFA_SIMULATION_TREE_COLLISIONANIMATIONLOOP_H */

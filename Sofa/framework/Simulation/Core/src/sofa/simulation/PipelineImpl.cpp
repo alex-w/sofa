@@ -30,6 +30,8 @@
 #include <sofa/simulation/Node.h>
 
 #include <sofa/helper/AdvancedTimer.h>
+#include <sofa/helper/ScopedAdvancedTimer.h>
+
 
 namespace sofa
 {
@@ -103,9 +105,8 @@ void PipelineImpl::computeCollisionReset()
         narrowPhaseDetection->setIntersectionMethod(intersectionMethod);
     if (contactManager!=nullptr && contactManager->getIntersectionMethod()!=intersectionMethod)
         contactManager->setIntersectionMethod(intersectionMethod);
-    sofa::helper::AdvancedTimer::stepBegin("CollisionReset");
+
     doCollisionReset();
-    sofa::helper::AdvancedTimer::stepEnd("CollisionReset");
 }
 
 void PipelineImpl::computeCollisionDetection()
@@ -121,9 +122,8 @@ void PipelineImpl::computeCollisionResponse()
 {
     const simulation::Node* root = dynamic_cast<simulation::Node*>(getContext());
     if(root == nullptr) return;
-    sofa::helper::AdvancedTimer::stepBegin("CollisionResponse");
+
     doCollisionResponse();
-    sofa::helper::AdvancedTimer::stepEnd("CollisionResponse");
 }
 
 } // namespace simulation

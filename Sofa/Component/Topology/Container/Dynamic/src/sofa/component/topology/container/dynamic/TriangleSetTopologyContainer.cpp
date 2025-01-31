@@ -26,13 +26,12 @@
 
 namespace sofa::component::topology::container::dynamic
 {
-using namespace std;
-using namespace sofa::defaulttype;
 
-
-int TriangleSetTopologyContainerClass = core::RegisterObject("Triangle set topology container")
-        .add< TriangleSetTopologyContainer >()
-        ;
+void registerTriangleSetTopologyContainer(sofa::core::ObjectFactory* factory)
+{
+    factory->registerObjects(core::ObjectRegistrationData("Topology container dedicated to a triangular topology.")
+        .add< TriangleSetTopologyContainer >());
+}
 
 TriangleSetTopologyContainer::TriangleSetTopologyContainer()
     : EdgeSetTopologyContainer()
@@ -74,13 +73,13 @@ void TriangleSetTopologyContainer::init()
 
     // only init if triangles are present at init.
     if (!m_triangle.empty())
-        initTopology();
+        computeCrossElementBuffers();
 }
 
-void TriangleSetTopologyContainer::initTopology()
+void TriangleSetTopologyContainer::computeCrossElementBuffers()
 {
-    // Force creation of Edge Neighboordhood buffers.
-    EdgeSetTopologyContainer::initTopology();
+    // Force creation of Edge Neighborhood buffers.
+    EdgeSetTopologyContainer::computeCrossElementBuffers();
 
     // Create triangle cross element buffers.
     createEdgesInTriangleArray();
@@ -125,6 +124,13 @@ void TriangleSetTopologyContainer::createTrianglesAroundVertexArray()
     m_trianglesAroundVertex.resize(getNbPoints());
     for (size_t i = 0; i < m_triangle.size(); ++i)
     {
+        if (m_triangle[i][0] >= getNbPoints() || m_triangle[i][1] >= getNbPoints() || m_triangle[i][2] >= getNbPoints())
+        {
+            msg_warning() << "trianglesAroundVertex creation failed, Triangle buffer is not consistent with number of points, Triangle: " << m_triangle[i] << " for: " << getNbPoints() << " points.";
+            continue;
+        }
+
+
         // adding edge i in the edge shell of both points
         for (unsigned int j=0; j<3; ++j)
             m_trianglesAroundVertex[ m_triangle[i][j]  ].push_back( (TriangleID)i );
@@ -216,7 +222,7 @@ void TriangleSetTopologyContainer::createEdgeSetArray()
             // sort vertices in lexicographic order
             const Edge e = ((v1<v2) ? Edge(v1,v2) : Edge(v2,v1));
 
-            if(edgeMap.find(e) == edgeMap.end())
+            if(!edgeMap.contains(e))
             {
                 // edge not in edgeMap so create a new one
                 const size_t edgeIndex = edgeMap.size();
@@ -320,7 +326,7 @@ void TriangleSetTopologyContainer::createEdgesInTriangleArray()
                 // sort vertices in lexicographic order
                 const Edge e = ((v1<v2) ? Edge(v1,v2) : Edge(v2,v1));
 
-                if(edgeMap.find(e) == edgeMap.end())
+                if(!edgeMap.contains(e))
                 {
                     // edge not in edgeMap so create a new one
                     const size_t edgeIndex = edgeMap.size();
@@ -590,7 +596,7 @@ const sofa::type::vector<TriangleSetTopologyContainer::EdgeID>& TriangleSetTopol
 {
     if (!hasBorderElementLists()) // this method should only be called when border lists exists
     {
-        dmsg_warning() << "getEdgesOnBorder: edgesOnBorder array is empty. Be sure to call createElementsOnBorder first.";
+        dmsg_warning() << "getEdgesOnBorder: d_edgesOnBorder array is empty. Be sure to call createElementsOnBorder first.";
         createElementsOnBorder();
     }
 
@@ -753,7 +759,7 @@ bool TriangleSetTopologyContainer::checkConnexity()
 
     if (elemAll.size() != nbr)
     {
-        msg_warning() << "CheckConnexity: Triangles are missings. There is more than one connexe component.";
+        msg_warning() << "CheckConnexity: Triangles are missing. There is more than one connexe component.";
         return false;
     }
     return true;

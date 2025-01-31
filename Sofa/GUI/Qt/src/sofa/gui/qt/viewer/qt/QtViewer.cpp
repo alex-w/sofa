@@ -81,7 +81,7 @@ QtViewer::QtViewer(QWidget* parent, const char* name)
     : QOpenGLWidget(parent)
 {
     m_backend.reset(new GLBackend());
-    pick = new GLPickHandler();
+    pick = std::make_unique<GLPickHandler>();
 
     this->setObjectName(name);
 
@@ -599,7 +599,7 @@ void QtViewer::DisplayOBJs()
             glMatrixMode(GL_MODELVIEW);
             glPushMatrix();
             glLoadIdentity();
-            gl::Axis::draw(sofa::type::Vec3(30.0,30.0,0.0),currentCamera->getOrientation().inverse(), 25.0);
+            gl::Axis::draw(sofa::type::Vec3(30.0,30.0,0.0),currentCamera->getOrientation().inverse(), 25.0, sofa::type::RGBAColor::red(), sofa::type::RGBAColor::green(), sofa::type::RGBAColor::blue());
             glMatrixMode(GL_PROJECTION);
             glPopMatrix();
             glMatrixMode(GL_MODELVIEW);
@@ -924,8 +924,8 @@ void QtViewer::calcProjection(int width, int height)
         currentCamera->setBoundingBox(vparams->sceneBBox().minBBox(), vparams->sceneBBox().maxBBox());
     }
     currentCamera->computeZ();
-    currentCamera->p_widthViewport.setValue(sofa::Size(width));
-    currentCamera->p_heightViewport.setValue(sofa::Size(height));
+    currentCamera->d_widthViewport.setValue(sofa::Size(width));
+    currentCamera->d_heightViewport.setValue(sofa::Size(height));
 
     GLdouble projectionMatrix[16];
     currentCamera->getOpenGLProjectionMatrix(projectionMatrix);

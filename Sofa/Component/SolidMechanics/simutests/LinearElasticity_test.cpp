@@ -39,9 +39,9 @@
 #include <sofa/component/topology/container/dynamic/TetrahedronSetGeometryAlgorithms.h>
 #include <sofa/component/mass/MeshMatrixMass.h>
 #include <sofa/component/odesolver/backward/StaticSolver.h>
-#include <sofa/component/constraint/projective/FixedConstraint.h>
-#include <sofa/component/constraint/projective/FixedPlaneConstraint.h>
-#include <sofa/component/constraint/projective/ProjectToLineConstraint.h>
+#include <sofa/component/constraint/projective/FixedProjectiveConstraint.h>
+#include <sofa/component/constraint/projective/FixedPlaneProjectiveConstraint.h>
+#include <sofa/component/constraint/projective/LineProjectiveConstraint.h>
 #include <sofa/simulation/DefaultAnimationLoop.h>
 
 namespace sofa {
@@ -136,13 +136,13 @@ CylinderTractionStruct<DataTypes>  createCylinderTractionScene(
     typename BoxRoi::SPtr boxRoi1 = modeling::addNew<BoxRoi>(root,"boxRoiFix");
     boxRoi1->d_alignedBoxes.setValue(vecBox);
     boxRoi1->d_strict.setValue(false);
-    // FixedConstraint
-    typename component::constraint::projective::FixedConstraint<DataTypes>::SPtr fc=
-        modeling::addNew<typename component::constraint::projective::FixedConstraint<DataTypes> >(root);
+    // FixedProjectiveConstraint
+    typename component::constraint::projective::FixedProjectiveConstraint<DataTypes>::SPtr fc=
+        modeling::addNew<typename component::constraint::projective::FixedProjectiveConstraint<DataTypes> >(root);
     sofa::modeling::setDataLink(&boxRoi1->d_indices,&fc->d_indices);
-    // FixedPlaneConstraint
-    typename component::constraint::projective::FixedPlaneConstraint<DataTypes>::SPtr fpc=
-            modeling::addNew<typename component::constraint::projective::FixedPlaneConstraint<DataTypes> >(root);
+    // FixedPlaneProjectiveConstraint
+    typename component::constraint::projective::FixedPlaneProjectiveConstraint<DataTypes>::SPtr fpc=
+            modeling::addNew<typename component::constraint::projective::FixedPlaneProjectiveConstraint<DataTypes> >(root);
     fpc->d_dmin= -0.01;
     fpc->d_dmax= 0.01;
     fpc->d_direction=Coord(0,0,1);
@@ -157,15 +157,15 @@ CylinderTractionStruct<DataTypes>  createCylinderTractionScene(
     typename component::mechanicalload::TrianglePressureForceField<DataTypes>::SPtr tpff=
             modeling::addNew<typename component::mechanicalload::TrianglePressureForceField<DataTypes> >(root);
     tractionStruct.forceField=tpff;
-    sofa::modeling::setDataLink(&boxRoi2->d_triangleIndices,&tpff->triangleList);
-    // ProjectToLineConstraint
-    typename component::constraint::projective::ProjectToLineConstraint<DataTypes>::SPtr ptlc=
-            modeling::addNew<typename component::constraint::projective::ProjectToLineConstraint<DataTypes> >(root);
-    ptlc->f_direction=Coord(1,0,0);
-    ptlc->f_origin=Coord(0,0,0);
+    sofa::modeling::setDataLink(&boxRoi2->d_triangleIndices,&tpff->d_triangleList);
+    // LineProjectiveConstraint
+    typename component::constraint::projective::LineProjectiveConstraint<DataTypes>::SPtr ptlc=
+            modeling::addNew<typename component::constraint::projective::LineProjectiveConstraint<DataTypes> >(root);
+    ptlc->d_direction=Coord(1, 0, 0);
+    ptlc->d_origin=Coord(0, 0, 0);
     sofa::type::vector<sofa::Index> vArray;
     vArray.push_back(resolutionCircumferential*(resolutionRadial-1)+1);
-    ptlc->f_indices.setValue(vArray);
+    ptlc->d_indices.setValue(vArray);
 
     return tractionStruct;
 }
@@ -196,7 +196,7 @@ struct LinearElasticity_test : public sofa::testing::BaseSimulationTest, sofa::t
 
 
     // Create the context for the scene
-    void SetUp()
+    void doSetUp() override
     {
         // Init simulation
         simulation = sofa::simulation::getSimulation();
@@ -248,13 +248,13 @@ struct LinearElasticity_test : public sofa::testing::BaseSimulationTest, sofa::t
                     sofa::simulation::node::reset(tractionStruct.root.get());
                     
                     // record the initial point of a given vertex
-                    Coord p0=tractionStruct.dofs.get()->read(sofa::core::ConstVecCoordId::position())->getValue()[vIndex];
+                    Coord p0=tractionStruct.dofs.get()->read(sofa::core::vec_id::read_access::position)->getValue()[vIndex];
 
                     //  do one step of the static solver
                     sofa::simulation::node::animate(tractionStruct.root.get(), 0.5_sreal);
 
                     // Get the simulated final position of that vertex
-                    Coord p1=tractionStruct.dofs.get()->read(sofa::core::ConstVecCoordId::position())->getValue()[vIndex];
+                    Coord p1=tractionStruct.dofs.get()->read(sofa::core::vec_id::read_access::position)->getValue()[vIndex];
                     // test the young modulus
                     Real longitudinalDeformation=(p1[2]-p0[2])/p0[2];
                     if (fabs(longitudinalDeformation-pressure/youngModulus)>1e-4) {
@@ -281,7 +281,7 @@ struct LinearElasticity_test : public sofa::testing::BaseSimulationTest, sofa::t
         }
         return true;
     }
-    void TearDown()
+    void doTearDown() override
     {
         if (tractionStruct.root!=nullptr)
             sofa::simulation::node::unload(tractionStruct.root);
@@ -289,13 +289,13 @@ struct LinearElasticity_test : public sofa::testing::BaseSimulationTest, sofa::t
 
 };
 
-// Define the list of DataTypes to instanciate
+// Define the list of DataTypes to instantiate
 using ::testing::Types;
 typedef Types<
     Vec3Types
-> DataTypes; // the types to instanciate.
+> DataTypes; // the types to instantiate.
 
-// Test suite for all the instanciations
+// Test suite for all the instantiations
 TYPED_TEST_SUITE(LinearElasticity_test, DataTypes);
 
 // first test topology

@@ -38,9 +38,11 @@ using sofa::type::RGBAColor;
 using sofa::type::Material;
 using namespace sofa::type;
 
-int OglModelClass = core::RegisterObject("Generic visual model for OpenGL display")
-    .add< OglModel >();
-
+void registerOglModel(sofa::core::ObjectFactory* factory)
+{
+    factory->registerObjects(core::ObjectRegistrationData("Generic visual model for OpenGL display.")
+        .add< OglModel >());
+}
 
 OglModel::OglModel()
     : blendTransparency(initData(&blendTransparency, true, "blendTranslucency", "Blend transparent parts"))
@@ -53,12 +55,11 @@ OglModel::OglModel()
     , pointSize(initData(&pointSize, 1.0f, "pointSize", "Point size (set if != 1, only for points rendering)"))
     , lineSmooth(initData(&lineSmooth, false, "lineSmooth", "Enable smooth line rendering"))
     , pointSmooth(initData(&pointSmooth, false, "pointSmooth", "Enable smooth point rendering"))
-    , isEnabled( initData(&isEnabled, true, "isEnabled", "Activate/deactive the component."))
-    , primitiveType( initData(&primitiveType, "primitiveType", "Select types of primitives to send (necessary for some shader types such as geometry or tesselation)"))
+    , primitiveType( initData(&primitiveType, "primitiveType", "Select types of primitives to send (necessary for some shader types such as geometry or tessellation)"))
     , blendEquation( initData(&blendEquation, "blendEquation", "if alpha blending is enabled this specifies how source and destination colors are combined") )
     , sourceFactor( initData(&sourceFactor, "sfactor", "if alpha blending is enabled this specifies how the red, green, blue, and alpha source blending factors are computed") )
     , destFactor( initData(&destFactor, "dfactor", "if alpha blending is enabled this specifies how the red, green, blue, and alpha destination blending factors are computed") )
-    , tex(nullptr)
+    , m_tex(nullptr)
     , vbo(0), iboEdges(0), iboTriangles(0), iboQuads(0)
     , VBOGenDone(false), initDone(false), useEdges(false), useTriangles(false), useQuads(false), canUsePatches(false)
     , oldVerticesSize(0), oldNormalsSize(0), oldTexCoordsSize(0), oldTangentsSize(0), oldBitangentsSize(0), oldEdgesSize(0), oldTrianglesSize(0), oldQuadsSize(0)
@@ -73,13 +74,30 @@ OglModel::OglModel()
     primitiveType.setValue(helper::OptionsGroup{"DEFAULT", "LINES_ADJACENCY", "PATCHES", "POINTS"}.setSelectedItem(0));
 }
 
+void OglModel::parse(core::objectmodel::BaseObjectDescription* arg)
+{
+    if (arg->getAttribute("isEnabled"))
+    {
+        msg_warning() << "isEnabled field has been renamed to \'enabled\' since v23.12 (#3931).";
+
+        this->d_enable.setValue(std::strcmp(arg->getAttribute("isEnabled"), "true") == 0 || arg->getAttributeAsInt("isEnabled"));
+    }
+
+    Inherit::parse(arg);
+}
+
 void OglModel::deleteTextures()
 {
-    if (tex!=nullptr) delete tex;
+    if (m_tex != nullptr) 
+    {
+        delete m_tex;
+        m_tex = nullptr;
+    }
 
     for (unsigned int i = 0 ; i < textures.size() ; i++)
     {
         delete textures[i];
+        textures[i] = nullptr;
     }
 }
 
@@ -113,19 +131,6 @@ OglModel::~OglModel()
     deleteBuffers();
 }
 
-void OglModel::parse(core::objectmodel::BaseObjectDescription* arg)
-{
-    if (arg->getAttribute("isToPrint")!=nullptr)
-    {
-        msg_deprecated() << "The 'isToPrint' data field has been deprecated in SOFA v19.06 due to lack of consistency in how it should work." << msgendl
-                            "Please contact sofa-dev team in case you need similar.";
-    }
-    Inherit1::parse(arg);
-}
-
-
-
-
 void OglModel::drawGroup(int ig, bool transparent)
 {
     glEnable(GL_NORMALIZE);
@@ -150,19 +155,19 @@ void OglModel::drawGroup(int ig, bool transparent)
     }
     else
     {
-        g = this->groups.getValue()[size_t(ig)];
+        g = this->d_groups.getValue()[size_t(ig)];
     }
     Material m;
     if (g.materialId < 0)
-        m = this->material.getValue();
+        m = this->d_material.getValue();
     else
-        m = this->materials.getValue()[size_t(g.materialId)];
+        m = this->d_materials.getValue()[size_t(g.materialId)];
 
     bool isTransparent = (m.useDiffuse && m.diffuse[3] < 1.0f) || hasTransparent();
     if (transparent ^ isTransparent) return;
 
 
-    if (!tex && m.useTexture && m.activated)
+    if (!m_tex && m.useTexture && m.activated)
     {
         //get the texture id corresponding to the current material
         size_t indexInTextureArray = size_t(materialTextureIdMap[g.materialId]);
@@ -288,7 +293,7 @@ void OglModel::drawGroup(int ig, bool transparent)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
-    if (!tex && m.useTexture && m.activated)
+    if (!m_tex && m.useTexture && m.activated)
     {
         int indexInTextureArray = materialTextureIdMap[g.materialId];
         if (indexInTextureArray < int(textures.size()) && textures[size_t(indexInTextureArray)])
@@ -302,7 +307,7 @@ void OglModel::drawGroup(int ig, bool transparent)
 
 void OglModel::drawGroups(bool transparent)
 {
-    const helper::ReadAccessor< Data< type::vector<FaceGroup> > > groups = this->groups;
+    const helper::ReadAccessor< Data< type::vector<FaceGroup> > > groups = this->d_groups;
 
     if (groups.empty())
     {
@@ -344,9 +349,6 @@ void OglModel::internalDraw(const core::visual::VisualParams* vparams, bool tran
     if (!vparams->displayFlags().getShowVisualModels())
         return;
 
-    if(!isEnabled.getValue())
-        return;
-
     /// Checks that the VBO's are ready.
     if(!VBOGenDone)
         return;
@@ -382,12 +384,12 @@ void OglModel::internalDraw(const core::visual::VisualParams* vparams, bool tran
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    if ((tex || putOnlyTexCoords.getValue()) )
+    if ((m_tex || d_putOnlyTexCoords.getValue()) )
     {
-        if(tex)
+        if(m_tex)
         {
             glEnable(GL_TEXTURE_2D);
-            tex->bind();
+            m_tex->bind();
         }
 
         const size_t textureArrayByteSize = vtexcoords.size()*sizeof(vtexcoords[0]);
@@ -525,11 +527,11 @@ void OglModel::internalDraw(const core::visual::VisualParams* vparams, bool tran
         glDepthMask(GL_TRUE);
     }
 
-    if ( (tex || putOnlyTexCoords.getValue()) )
+    if ( (m_tex || d_putOnlyTexCoords.getValue()) )
     {
-        if (tex)
+        if (m_tex)
         {
-            tex->unbind();
+            m_tex->unbind();
             glDisable(GL_TEXTURE_2D);
         }
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -585,7 +587,7 @@ bool OglModel::hasTransparent()
 
 bool OglModel::hasTexture()
 {
-    return !textures.empty() || tex;
+    return !textures.empty() || m_tex;
 }
 
 bool OglModel::loadTexture(const std::string& filename)
@@ -593,7 +595,7 @@ bool OglModel::loadTexture(const std::string& filename)
     helper::io::Image *img = helper::io::Image::Create(filename);
     if (!img)
         return false;
-    tex = new sofa::gl::Texture(img, true, true, false, srgbTexturing.getValue());
+    m_tex = new sofa::gl::Texture(img, true, true, false, d_srgbTexturing.getValue());
     return true;
 }
 
@@ -605,24 +607,24 @@ bool OglModel::loadTextures()
 
     //count the total number of activated textures
     std::vector<unsigned int> activatedTextures;
-    for (unsigned int i = 0 ; i < this->materials.getValue().size() ; ++i)
-        if (this->materials.getValue()[i].useTexture && this->materials.getValue()[i].activated)
+    for (unsigned int i = 0 ; i < this->d_materials.getValue().size() ; ++i)
+        if (this->d_materials.getValue()[i].useTexture && this->d_materials.getValue()[i].activated)
             activatedTextures.push_back(i);
 
     for (std::vector< unsigned int>::iterator i = activatedTextures.begin() ; i < activatedTextures.end(); ++i)
     {
-        std::string textureFile(this->materials.getValue()[*i].textureFilename);
+        std::string textureFile(this->d_materials.getValue()[*i].textureFilename);
 
         if (!sofa::helper::system::DataRepository.findFile(textureFile))
         {
-            textureFile = this->fileMesh.getFullPath();
+            textureFile = this->d_fileMesh.getFullPath();
             const std::size_t position = textureFile.rfind("/");
-            textureFile.replace (position+1,textureFile.length() - position, this->materials.getValue()[*i].textureFilename);
+            textureFile.replace (position+1,textureFile.length() - position, this->d_materials.getValue()[*i].textureFilename);
 
             if (!sofa::helper::system::DataRepository.findFile(textureFile))
             {
-                msg_error() << "Texture \"" << this->materials.getValue()[*i].textureFilename << "\" not found"
-                            << " in material " << this->materials.getValue()[*i].name ;
+                msg_error() << "Texture \"" << this->d_materials.getValue()[*i].textureFilename << "\" not found"
+                            << " in material " << this->d_materials.getValue()[*i].name ;
                 result = false;
                 continue;
             }
@@ -631,11 +633,11 @@ bool OglModel::loadTextures()
         helper::io::Image *img = helper::io::Image::Create(textureFile);
         if (!img)
         {
-            msg_error() << "couldn't create an image from file " << this->materials.getValue()[*i].textureFilename ;
+            msg_error() << "couldn't create an image from file " << this->d_materials.getValue()[*i].textureFilename ;
             result = false;
             continue;
         }
-        sofa::gl::Texture * text = new sofa::gl::Texture(img, true, true, false, srgbTexturing.getValue());
+        sofa::gl::Texture * text = new sofa::gl::Texture(img, true, true, false, d_srgbTexturing.getValue());
         materialTextureIdMap.insert(std::pair<int, int>(*i,textures.size()));
         textures.push_back( text );
     }
@@ -646,7 +648,7 @@ bool OglModel::loadTextures()
     return result;
 }
 
-void OglModel::initVisual()
+void OglModel::doInitVisual(const core::visual::VisualParams*)
 {
     initTextures();
 
@@ -683,10 +685,10 @@ void OglModel::initVisual()
     updateBuffers();
 
     // forcing the normal computation if we do not want to use the given ones
-    if( !this->m_useNormals.getValue() ) { this->m_vnormals.beginWriteOnly()->clear(); this->m_vnormals.endEdit(); }
+    if( !this->d_useNormals.getValue() ) { this->m_vnormals.beginWriteOnly()->clear(); this->m_vnormals.endEdit(); }
     computeNormals();
 
-    if (m_updateTangents.getValue())
+    if (d_updateTangents.getValue())
         computeTangents();
 
     if ( alphaBlend.getValue() )
@@ -699,9 +701,9 @@ void OglModel::initVisual()
 
 void OglModel::initTextures()
 {
-    if (tex)
+    if (m_tex)
     {
-        tex->init();
+        m_tex->init();
     }
     else
     {
@@ -758,7 +760,7 @@ void OglModel::initVertexBuffer()
     positionsBufferSize = (vertices.size()*sizeof(Vec3f));
     normalsBufferSize = (vnormals.size()*sizeof(Vec3f));
 
-    if (tex || putOnlyTexCoords.getValue() || !textures.empty())
+    if (m_tex || d_putOnlyTexCoords.getValue() || !textures.empty())
     {
         textureCoordsBufferSize = vtexcoords.size() * sizeof(vtexcoords[0]);
 
@@ -850,7 +852,7 @@ void OglModel::updateVertexBuffer()
     positionsBufferSize = (vertices.size()*sizeof(Vec3f));
     normalsBufferSize = (vnormals.size()*sizeof(Vec3f));
 
-    if (tex || putOnlyTexCoords.getValue() || !textures.empty())
+    if (m_tex || d_putOnlyTexCoords.getValue() || !textures.empty())
     {
         textureCoordsBufferSize = (vtexcoords.size() * sizeof(vtexcoords[0]));
 
@@ -876,7 +878,7 @@ void OglModel::updateVertexBuffer()
         normalBuffer);
 
     ////Texture coords
-    if (tex || putOnlyTexCoords.getValue() || !textures.empty())
+    if (m_tex || d_putOnlyTexCoords.getValue() || !textures.empty())
     {
         glBufferSubData(GL_ARRAY_BUFFER,
             positionsBufferSize + normalsBufferSize,
@@ -989,7 +991,7 @@ void OglModel::updateBuffers()
                 if(oldEdgesSize != edges.size())
                     initEdgesIndicesBuffer();
                 else
-                    if(edgesRevision < m_edges.getCounter())
+                    if(edgesRevision < d_edges.getCounter())
                         updateEdgesIndicesBuffer();
 
             }
@@ -1002,7 +1004,7 @@ void OglModel::updateBuffers()
                 if (oldTrianglesSize != triangles.size())
                     initTrianglesIndicesBuffer();
                 else
-                    if (trianglesRevision < m_triangles.getCounter())
+                    if (trianglesRevision < d_triangles.getCounter())
                         updateTrianglesIndicesBuffer();
             }
             else if (triangles.size() > 0)
@@ -1014,7 +1016,7 @@ void OglModel::updateBuffers()
                 if(oldQuadsSize != quads.size())
                     initQuadsIndicesBuffer();
                 else
-                    if (quadsRevision < m_quads.getCounter())
+                    if (quadsRevision < d_quads.getCounter())
                         updateQuadsIndicesBuffer();
             }
             else if (quads.size() > 0)
@@ -1030,9 +1032,9 @@ void OglModel::updateBuffers()
         oldTrianglesSize = triangles.size();
         oldQuadsSize = quads.size();
 
-        edgesRevision = m_edges.getCounter();
-        trianglesRevision = m_triangles.getCounter();
-        quadsRevision = m_quads.getCounter();
+        edgesRevision = d_edges.getCounter();
+        trianglesRevision = d_triangles.getCounter();
+        quadsRevision = d_quads.getCounter();
     }
 }
 
@@ -1056,7 +1058,7 @@ GLenum OglModel::getGLenum(const char* c ) const
     {
         return GL_ONE_MINUS_SRC_ALPHA;
     }
-    // .... add ohter OGL symbolic constants
+    // .... add other OGL symbolic constants
     // glBlendEquation Value
     else if  ( strcmp( c, "GL_FUNC_ADD") == 0)
     {

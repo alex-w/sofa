@@ -34,16 +34,15 @@ namespace sofa::simulation
 
 void SolveVisitor::processSolver(simulation::Node* node, sofa::core::behavior::OdeSolver* s)
 {
-    sofa::helper::AdvancedTimer::stepBegin("Mechanical",node);
+    helper::ScopedAdvancedTimer timer("Mechanical",node);
     s->solve(params, dt, x, v);
-    sofa::helper::AdvancedTimer::stepEnd("Mechanical",node);
 }
 
 void SolveVisitor::fwdInteractionForceField(Node* node, core::behavior::BaseInteractionForceField* forceField)
 {
     SOFA_UNUSED(node);
 
-    const core::MultiVecDerivId ffId = core::VecDerivId::externalForce();
+    const core::MultiVecDerivId ffId = core::vec_id::write_access::externalForce;
     core::MechanicalParams mparams;
     mparams.setDt(dt);
     forceField->addForce(&mparams, ffId);
@@ -82,7 +81,7 @@ void SolveVisitor::processNodeBottomUp(simulation::Node*)
     {
         auto* taskScheduler = sofa::simulation::MainTaskSchedulerFactory::createInRegistry();
         assert(taskScheduler != nullptr);
-        sofa::helper::ScopedAdvancedTimer parallelSolveTimer("waitParallelTasks");
+        SCOPED_TIMER_VARNAME(parallelSolveTimer, "waitParallelTasks");
         taskScheduler->workUntilDone(&m_status);
     }
     m_tasks.clear();
@@ -119,13 +118,13 @@ SolveVisitor::SolveVisitor(const sofa::core::ExecParams* params, SReal _dt, bool
 {
     if(free)
     {
-        x = sofa::core::VecCoordId::freePosition();
-        v = sofa::core::VecDerivId::freeVelocity();
+        x = sofa::core::vec_id::write_access::freePosition;
+        v = sofa::core::vec_id::write_access::freeVelocity;
     }
     else
     {
-        x = sofa::core::VecCoordId::position();
-        v = sofa::core::VecDerivId::velocity();
+        x = sofa::core::vec_id::write_access::position;
+        v = sofa::core::vec_id::write_access::velocity;
     }
 
     if (m_parallelSolve)

@@ -67,9 +67,9 @@ public:
 
 
     Data<VecCoord> d_inputPositions; ///< Initial positions of the master points
-    Data<VecCoord> d_mappedPointPositions; ///< Initial positions of the mapped points
+    Data<VecCoord> d_mappedPointPositions; ///< Initial positions of the points to be mapped
     Data<VecCoord> d_barycentricPositions; ///< Output : Barycentric positions of the mapped points
-    Data< VecIndices> d_tableElements; ///< Output : Table that provides the element index to which each input point belongs
+    Data< VecIndices> d_tableElements; ///< Output : Table that provides the index of the element to which each input point belongs
     Data<bool> d_bComputeLinearInterpolation; ///< if true, computes a linear interpolation (debug)
 
     Data< sofa::type::vector<sofa::type::vector< sofa::Index > > > d_interpolationIndices; ///< Indices of a linear interpolation
@@ -88,7 +88,7 @@ private:
 
 
 
-#if  !defined(SOFA_COMPONENT_ENGINE_MESHBARYCENTRICMAPPERENGINE_CPP)
+#if !defined(SOFA_COMPONENT_ENGINE_MESHBARYCENTRICMAPPERENGINE_CPP)
 extern template class SOFA_COMPONENT_ENGINE_GENERATE_API MeshBarycentricMapperEngine<defaulttype::Vec3Types>;
 
 #endif

@@ -68,8 +68,8 @@ public:
 
     using Index = sofa::Index;
 
-    Data<SReal> d_bendingStiffness;  ///< Material parameter
-    Data<SReal> d_minDistValidity; ///< Minimal distance to consider a spring valid
+    Data<SReal> d_bendingStiffness; ///< Bending stiffness of the material
+    Data<SReal> d_minDistValidity; ///< Distance under which a spring is not valid
 
     /// Link to be set to the topology container in the component graph. 
     SingleLink<FastTriangularBendingSprings<DataTypes>, sofa::core::topology::BaseMeshTopology, BaseLink::FLAG_STOREPATH | BaseLink::FLAG_STRONGLINK> l_topology;
@@ -210,7 +210,7 @@ protected:
     SReal m_potentialEnergy;
 };
 
-#if  !defined(SOFA_COMPONENT_FORCEFIELD_FastTriangularBendingSprings_CPP)
+#if !defined(SOFA_COMPONENT_FORCEFIELD_FastTriangularBendingSprings_CPP)
 extern template class SOFA_COMPONENT_SOLIDMECHANICS_SPRING_API FastTriangularBendingSprings<defaulttype::Vec3Types>;
 
 #endif // !defined(SOFA_COMPONENT_FORCEFIELD_FastTriangularBendingSprings_CPP)

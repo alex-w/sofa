@@ -100,7 +100,7 @@ public:
 
     /// Get the potential energy associated to this ForceField.
     ///
-    /// Used to extimate the total energy of the system by some
+    /// Used to estimate the total energy of the system by some
     /// post-stabilization techniques.
     ///
     /// This method retrieves the x vector from the MechanicalState and call
@@ -137,7 +137,7 @@ public:
 
     /// Get the potential energy associated to this ForceField.
     ///
-    /// Used to extimate the total energy of the system by some
+    /// Used to estimate the total energy of the system by some
     /// post-stabilization techniques.
     ///
     /// This method must be implemented by the component, and is usually called
@@ -157,10 +157,9 @@ public:
     using Inherit2::getMechModel2;
 };
 
-#if  !defined(SOFA_CORE_BEHAVIOR_MIXEDINTERACTIONFORCEFIELD_CPP)
+#if !defined(SOFA_CORE_BEHAVIOR_MIXEDINTERACTIONFORCEFIELD_CPP)
 extern template class SOFA_CORE_API MixedInteractionForceField<defaulttype::Vec1Types, defaulttype::Vec3Types>;
 extern template class SOFA_CORE_API MixedInteractionForceField<defaulttype::Vec1Types, defaulttype::Rigid3Types>;
-
 extern template class SOFA_CORE_API MixedInteractionForceField<defaulttype::Vec3Types, defaulttype::Vec3Types>;
 extern template class SOFA_CORE_API MixedInteractionForceField<defaulttype::Vec2Types, defaulttype::Vec2Types>;
 extern template class SOFA_CORE_API MixedInteractionForceField<defaulttype::Vec1Types, defaulttype::Vec1Types>;
@@ -169,6 +168,7 @@ extern template class SOFA_CORE_API MixedInteractionForceField<defaulttype::Rigi
 extern template class SOFA_CORE_API MixedInteractionForceField<defaulttype::Vec3Types, defaulttype::Rigid3Types>;
 extern template class SOFA_CORE_API MixedInteractionForceField<defaulttype::Vec2Types, defaulttype::Rigid2Types>;
 extern template class SOFA_CORE_API MixedInteractionForceField<defaulttype::Rigid3Types, defaulttype::Vec3Types>;
+extern template class SOFA_CORE_API MixedInteractionForceField<defaulttype::Rigid3Types, defaulttype::Vec1Types>;
 extern template class SOFA_CORE_API MixedInteractionForceField<defaulttype::Rigid2Types, defaulttype::Vec2Types>;
 
 
