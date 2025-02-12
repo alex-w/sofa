@@ -59,15 +59,10 @@ using sofa::helper::system::FileSystem;
 #define ON_WIN32 false
 #endif // WIN32
 
-namespace sofa
-{
 
-namespace helper
+namespace sofa::helper::system
 {
-
-namespace system
-{
-// replacing every occurences of "//"  by "/"
+// replacing every occurrences of "//"  by "/"
 std::string cleanPath( const std::string& path )
 {
     std::string p = path;
@@ -91,7 +86,6 @@ FileRepository PluginRepository(
     {
         Utils::getSofaPathTo("bin"),
         Utils::getSofaPathTo("plugins"),
-        Utils::getSofaPathTo("collections"),
         Utils::getExecutableDirectory(),
     }
 );
@@ -99,9 +93,8 @@ FileRepository PluginRepository(
 FileRepository PluginRepository(
     "SOFA_PLUGIN_PATH",
     {
-        Utils::getSofaPathTo("plugins"),
-        Utils::getSofaPathTo("collections"),
         Utils::getSofaPathTo("lib"),
+        Utils::getSofaPathTo("plugins"),
     }
 );
 #endif
@@ -179,7 +172,7 @@ std::string FileRepository::cleanPath(const std::string& path)
 
 void FileRepository::addFirstPath(const std::string& p)
 {
-    // replacing every occurences of "//" by "/"
+    // replacing every occurrences of "//" by "/"
     std::string path = FileSystem::cleanPath(p);
 
     std::vector<std::string> entries;
@@ -199,7 +192,7 @@ void FileRepository::addFirstPath(const std::string& p)
 
 void FileRepository::addLastPath(const std::string& p)
 {
-    // replacing every occurences of "//" by "/"
+    // replacing every occurrences of "//" by "/"
     std::string path = FileSystem::cleanPath(p);
 
     std::vector<std::string> entries;
@@ -358,9 +351,9 @@ const std::string FileRepository::getTempPath() const
     return fs::temp_directory_path().string();
 }
 
-} // namespace system
+} // namespace sofa::helper::system
 
-} // namespace helper
 
-} // namespace sofa
+
+
 

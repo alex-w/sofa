@@ -31,7 +31,7 @@
 
 #include <sofa/component/statecontainer/MechanicalObject.h>
 #include <sofa/simulation/graph/DAGNode.h>
-#include <sofa/component/solidmechanics/spring/StiffSpringForceField.h>
+#include <sofa/component/solidmechanics/spring/SpringForceField.h>
 #include <sofa/core/behavior/ForceField.h>
 
 #include <sofa/core/behavior/MultiVec.h>
@@ -115,6 +115,7 @@ TEST(LinearSystem, MatrixSystem_springForceField)
 
     //Create the Mechanical Object and define its positions
     auto mstate = sofa::core::objectmodel::New<sofa::component::statecontainer::MechanicalObject<sofa::defaulttype::Vec3Types> >();
+    mstate->setName("mstate");
     root->addObject(mstate);
     mstate->resize(2);
     auto writeAccessor = mstate->writePositions();
@@ -122,7 +123,7 @@ TEST(LinearSystem, MatrixSystem_springForceField)
     writeAccessor[1] = sofa::type::Vec3{0, 0, 1};
 
     //Create a spring connecting two particles of the Mechanical Object
-    auto spring = sofa::core::objectmodel::New<sofa::component::solidmechanics::spring::StiffSpringForceField<sofa::defaulttype::Vec3Types> >();
+    auto spring = sofa::core::objectmodel::New<sofa::component::solidmechanics::spring::SpringForceField<sofa::defaulttype::Vec3Types> >();
     spring->setName(root->getNameHelper().resolveName(spring->getClassName(), sofa::core::ComponentNameHelper::Convention::xml));
     root->addObject(spring);
     const SReal springStiffness = 1_sreal;
@@ -135,7 +136,7 @@ TEST(LinearSystem, MatrixSystem_springForceField)
 
     // Compute the external force. This step is mandatory because most of the time force fields
     // pre-computes required elements for the matrix assembly in the addForce method
-    sofa::core::MultiVecDerivId ffId = sofa::core::VecDerivId::externalForce();
+    sofa::core::MultiVecDerivId ffId = sofa::core::vec_id::write_access::externalForce;
     ((sofa::core::behavior::BaseForceField*)spring.get())->addForce(&mparams, ffId);
 
 
@@ -249,9 +250,23 @@ public:
         dfdx(10, 20) += 0.;
     }
 
-    void addForce(const sofa::core::MechanicalParams*, typename Inherit1::DataVecDeriv& f, const typename Inherit1::DataVecCoord& x, const typename Inherit1::DataVecDeriv& v) override {}
-    void addDForce(const sofa::core::MechanicalParams* mparams, typename Inherit1::DataVecDeriv& df, const typename Inherit1::DataVecDeriv& dx ) override {}
-    SReal getPotentialEnergy(const sofa::core::MechanicalParams*, const typename Inherit1::DataVecCoord& x) const override { return 0._sreal; }
+    void addForce(const sofa::core::MechanicalParams*, typename Inherit1::DataVecDeriv& f, const typename Inherit1::DataVecCoord& x, const typename Inherit1::DataVecDeriv& v) override
+    {
+        SOFA_UNUSED(f);
+        SOFA_UNUSED(x);
+        SOFA_UNUSED(v);
+    }
+    void addDForce(const sofa::core::MechanicalParams* mparams, typename Inherit1::DataVecDeriv& df, const typename Inherit1::DataVecDeriv& dx ) override
+    {
+        SOFA_UNUSED(mparams);
+        SOFA_UNUSED(df);
+        SOFA_UNUSED(dx);
+    }
+    SReal getPotentialEnergy(const sofa::core::MechanicalParams*, const typename Inherit1::DataVecCoord& x) const override
+    {
+        SOFA_UNUSED(x);
+        return 0._sreal;
+    }
 };
 
 /// Empty matrix class with the interface of a BaseMatrix
@@ -272,26 +287,42 @@ public:
     }
     SReal element(Index i, Index j) const override
     {
+        SOFA_UNUSED(i);
+        SOFA_UNUSED(j);
         return {};
     }
     void resize(Index nbRow, Index nbCol) override
     {
+        SOFA_UNUSED(nbRow);
+        SOFA_UNUSED(nbCol);
     }
     void clear() override
     {
     }
     void set(Index i, Index j, double v) override
     {
+        SOFA_UNUSED(i);
+        SOFA_UNUSED(j);
+        SOFA_UNUSED(v);
     }
     void add(Index row, Index col, double v) override
     {
+        SOFA_UNUSED(row);
+        SOFA_UNUSED(col);
+        SOFA_UNUSED(v);
         //add method is empty to prevent crashes in tests
     }
     void add(Index row, Index col, const sofa::type::Mat3x3d& _M) override
     {
+        SOFA_UNUSED(row);
+        SOFA_UNUSED(col);
+        SOFA_UNUSED(_M);
     }
     void add(Index row, Index col, const sofa::type::Mat3x3f& _M) override
     {
+        SOFA_UNUSED(row);
+        SOFA_UNUSED(col);
+        SOFA_UNUSED(_M);
     }
     static const char* Name() { return "EmptyMatrix"; }
 };

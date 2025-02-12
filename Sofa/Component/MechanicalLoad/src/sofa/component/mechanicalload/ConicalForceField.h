@@ -31,7 +31,7 @@
 namespace sofa::component::mechanicalload
 {
 
-/// This class can be overridden if needed for additionnal storage within template specializations.
+/// This class can be overridden if needed for additional storage within template specializations.
 template<class DataTypes>
 class ConicalForceFieldInternalData
 {
@@ -121,7 +121,7 @@ public:
 };
 
 
-#if  !defined(SOFA_COMPONENT_FORCEFIELD_CONICALFORCEFIELD_CPP)
+#if !defined(SOFA_COMPONENT_FORCEFIELD_CONICALFORCEFIELD_CPP)
 extern template class SOFA_COMPONENT_MECHANICALLOAD_API ConicalForceField<defaulttype::Vec3Types>;
 
 #endif

@@ -22,7 +22,7 @@
 #include <sofa/testing/BaseSimulationTest.h>
 using sofa::testing::BaseSimulationTest;
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 using sofa::simulation::Node;
 
 #include <sofa/type/Vec.h>
@@ -42,9 +42,9 @@ public:
         root->setGravity(Vec3(0.0,0.0,0.0));
         root->setDt(dt);
 
-        sofa::simpleapi::importPlugin("Sofa.Component.ODESolver.Forward");
-        sofa::simpleapi::importPlugin("Sofa.Component.StateContainer");
-        sofa::simpleapi::importPlugin("Sofa.Component.SolidMechanics.Spring");
+        sofa::simpleapi::importPlugin(Sofa.Component.ODESolver.Forward);
+        sofa::simpleapi::importPlugin(Sofa.Component.StateContainer);
+        sofa::simpleapi::importPlugin(Sofa.Component.SolidMechanics.Spring);
 
         const Node::SPtr childNode = sofa::simpleapi::createChild(root, "Particle");
         sofa::simpleapi::createObject(childNode, "EulerExplicitSolver");

@@ -41,11 +41,11 @@ using sofa::component::sceneutility::MessageHandlerComponent ;
 
 using sofa::helper::logging::MessageDispatcher ;
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 
 bool perTestInit()
 {
-    sofa::simpleapi::importPlugin("Sofa.Component.SceneUtility");
+    sofa::simpleapi::importPlugin(Sofa.Component.SceneUtility);
 
     /// THE TESTS HERE ARE NOT INHERITING FROM SOFA TEST SO WE NEED TO MANUALLY INSTALL THE HANDLER
     /// DO NO REMOVE

@@ -44,13 +44,11 @@ namespace sofa::component::mapping::linear
 
 using namespace sofa::defaulttype;
 
-// Register in the Factory
-int BarycentricMappingRigidClass = core::RegisterObject("")
-        .add< BarycentricMapping< Vec3Types, Rigid3Types > >()
-
-
-        ;
-
+void registerBarycentricMappingRigid(sofa::core::ObjectFactory* factory)
+{
+    factory->registerObjects(core::ObjectRegistrationData("Mapping using barycentric coordinates of the child with respect to cells of its parent.")
+        .add< BarycentricMapping< Vec3Types, Rigid3Types > >());
+}
 
 template <>
 void BarycentricMapperHexahedronSetTopology<defaulttype::Vec3Types, defaulttype::Rigid3Types>::handleTopologyChange(core::topology::Topology* t)
@@ -65,7 +63,7 @@ void BarycentricMapperHexahedronSetTopology<defaulttype::Vec3Types, defaulttype:
     typedef sofa::core::behavior::MechanicalState<defaulttype::Vec3Types> InMechanicalStateT;
     InMechanicalStateT* inState;
     this->m_fromTopology->getContext()->get(inState);
-    const auto& inRestPos = (inState->read(core::ConstVecCoordId::restPosition())->getValue());
+    const auto& inRestPos = (inState->read(core::vec_id::read_access::restPosition)->getValue());
 
     for ( std::list<const core::topology::TopologyChange *>::const_iterator changeIt = itBegin;
             changeIt != itEnd; ++changeIt )
@@ -80,10 +78,8 @@ void BarycentricMapperHexahedronSetTopology<defaulttype::Vec3Types, defaulttype:
             {
                 type::vector<MappingData>& mapData = *(d_map.beginEdit());
 
-                for ( auto iter = m_invalidIndex.cbegin();
-                        iter != m_invalidIndex.cend(); ++iter )
+                for (const int j : m_invalidIndex)
                 {
-                    const int j = *iter;
                     if ( mapData[j].in_index == sofa::InvalidID ) // compute new mapping
                     {
                         sofa::type::Vec3 coefs;
@@ -135,10 +131,9 @@ void BarycentricMapperHexahedronSetTopology<defaulttype::Vec3Types, defaulttype:
             const auto &hexahedra =
                     ( static_cast< const sofa::core::topology::HexahedraRemoved *> ( *changeIt ) )->getArray();
 
-            for ( unsigned int i=0; i<hexahedra.size(); ++i )
+            for (const unsigned int cubeId : hexahedra)
             {
                 // remove all references to the removed cubes from the mapping data
-                const unsigned int cubeId = hexahedra[i];
                 for ( unsigned int j=0; j<d_map.getValue().size(); ++j )
                 {
                     if ( d_map.getValue()[j].in_index == cubeId ) // invalidate mapping

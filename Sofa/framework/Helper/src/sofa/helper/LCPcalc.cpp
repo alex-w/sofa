@@ -30,10 +30,8 @@
 #include <cstring>
 #include <iomanip>
 
-namespace sofa
-{
 
-namespace helper
+namespace sofa::helper
 {
 
 using namespace std;
@@ -226,7 +224,7 @@ void LCP::solveNLCP(bool convergenceTest, std::vector<SReal>* residuals, std::ve
  * res[0..dim-1] = U
  * res[dim..2*dim-1] = F
  */
-int resoudreLCP(int dim, SReal * q, SReal ** M, SReal * res)
+int solveLCP(int dim, SReal * q, SReal ** M, SReal * res)
 {
 
     // déclaration des variables
@@ -329,9 +327,8 @@ int resoudreLCP(int dim, SReal * q, SReal ** M, SReal * res)
         // si le pivot est nul, le LCP echoue
         if (fabs(pivot)<EPSILON_LCP)
         {
-            afficheLCP(q,M,dim);
+            printLCP(q,M,dim);
             printf("*** Pas de solution *** \n");
-//            boucles=MAX_BOU;
             result=0;
             for(compteur=0; compteur<dim; compteur++)
             {
@@ -380,9 +377,6 @@ int resoudreLCP(int dim, SReal * q, SReal ** M, SReal * res)
         }
     }
 
-    // affichage du nb de boucles
-    //printf("\n %d boucle(s) ",boucles);
-
     // stockage du resultat
     for(compteur=0; compteur<2*dim; compteur++)
     {
@@ -410,9 +404,7 @@ int resoudreLCP(int dim, SReal * q, SReal ** M, SReal * res)
 }
 
 
-
-
-void afficheSyst(SReal *q,SReal **M, int *base, SReal **mat, int dim)
+void printSyst(SReal *q,SReal **M, int *base, SReal **mat, int dim)
 {
     int compteur, compteur2;
 
@@ -458,7 +450,7 @@ void afficheSyst(SReal *q,SReal **M, int *base, SReal **mat, int dim)
 }
 
 /********************************************************************************************/
-void afficheLCP(SReal *q, SReal **M, int dim)
+void printLCP(SReal *q, SReal **M, int dim)
 {
     int compteur, compteur2;
     // affichage de la matrice du LCP
@@ -483,7 +475,7 @@ void afficheLCP(SReal *q, SReal **M, int dim)
 }
 
 /********************************************************************************************/
-void afficheLCP(SReal *q, SReal **M, SReal *f, int dim)
+void printLCP(SReal *q, SReal **M, SReal *f, int dim)
 {
     int compteur, compteur2;
     // affichage de la matrice du LCP
@@ -786,7 +778,7 @@ struct listSortAscending
    Classe
    - NLCP {dim , dfree, W , f
 
-    void NLCPSolve( int numIteration, const SReal &tol, bool convergenceTest)
+    void NLCPSolve( int numIteration, const SReal &d_tol, bool convergenceTest)
     }
 
 
@@ -1295,7 +1287,7 @@ int nlcp_multiGrid(int dim, SReal *dfree, SReal**W, SReal *f, SReal mu, SReal to
     if(verbose)
     {
         dmsg_info("LCPcalc") <<"initial steps at the finest level " ;
-        afficheLCP(dfree, W, f, dim);
+        printLCP(dfree, W, f, dim);
     }
 
     // STEP 2: DESCENTE AU NIVEAU GROSSIER => PROJECTION
@@ -1426,7 +1418,7 @@ int nlcp_multiGrid(int dim, SReal *dfree, SReal**W, SReal *f, SReal mu, SReal to
     if(verbose)
     {
         dmsg_info("LCPcalc")<< "LCP at the COARSE LEVEL: " ;
-        afficheLCP(d_free_coarse, W_coarse, F_coarse,num_group*3);
+        printLCP(d_free_coarse, W_coarse, F_coarse,num_group*3);
     }
 
 
@@ -1614,11 +1606,11 @@ int nlcp_gaussseidel(int dim, SReal *dfree, SReal**W, SReal *f, SReal mu, SReal 
         for (c1=0; c1<numContacts; c1++)
         {
             // index of contact
-            int index1 = c1;
+            const int index1 = c1;
 
             // put the previous value of the contact force in a buffer and put the current value to 0
             f_1[0] = f[3*index1]; f_1[1] = f[3*index1+1]; f_1[2] = f[3*index1+2];
-            set3Dof(f,index1,0.0,0.0,0.0); //		f[3*index] = 0.0; f[3*index+1] = 0.0; f[3*index+2] = 0.0;
+            set3Dof(f,index1, 0, 0, 0); //		f[3*index] = 0.0; f[3*index+1] = 0.0; f[3*index+2] = 0.0;
 
             // computation of actual d due to contribution of other contacts
             dn=dfree[3*index1]; dt=dfree[3*index1+1]; ds=dfree[3*index1+2];
@@ -1634,7 +1626,8 @@ int nlcp_gaussseidel(int dim, SReal *dfree, SReal**W, SReal *f, SReal mu, SReal 
             if (minW != 0.0 && fabs(W[3*index1  ][3*index1  ]) <= minW)
             {
                 // constraint compliance is too small
-                if(it==0){
+                if(it==0)
+                {
                     std::stringstream tmpmsg;
                     tmpmsg << "Compliance too small for contact " << index1 << ": |" << std::scientific << W[3*index1  ][3*index1  ] << "| < " << minW << std::fixed ;
                     dmsg_warning("LCPcalc") << tmpmsg.str() ;
@@ -1716,7 +1709,7 @@ int nlcp_gaussseidel(int dim, SReal *dfree, SReal**W, SReal *f, SReal mu, SReal 
     if (verbose)
     {
         msg_warning("LCPcalc")<<"No convergence in  nlcp_gaussseidel function : error ="<<error <<" after"<< it<<" iterations";
-        afficheLCP(dfree,W,f,dim);
+        printLCP(dfree,W,f,dim);
     }
 
     return 0;
@@ -1725,19 +1718,17 @@ int nlcp_gaussseidel(int dim, SReal *dfree, SReal**W, SReal *f, SReal mu, SReal 
 
 int nlcp_gaussseidelTimed(int dim, SReal *dfree, SReal**W, SReal*f, SReal mu, SReal tol, int numItMax, bool useInitialF, SReal timeout, bool verbose)
 {
-    SReal test = dim/3;
-    const SReal zero = 0.0;
-    const int numContacts =  (int) floor(test);
-    test = dim/3 - numContacts;
+    const int numContacts =  dim/3;
+
+    if (dim % 3)
+    {
+        dmsg_info("LCPcalc") << "dim should be dividable by 3 in nlcp_gaussseidelTimed" ;
+        return 0;
+    }
 
     const ctime_t t0 = CTime::getTime();
     const ctime_t tdiff = (ctime_t)(timeout*CTime::getTicksPerSec());
 
-    if (test>0.01)
-    {
-        printf("\n WARNING dim should be dividable by 3 in nlcp_gaussseidel");
-        return 0;
-    }
     // iterators
     int it,c1,i;
 
@@ -1757,17 +1748,6 @@ int nlcp_gaussseidelTimed(int dim, SReal *dfree, SReal**W, SReal*f, SReal mu, SR
     W33 = (LocalBlock33 **) malloc (dim*sizeof(LocalBlock33));
     for (c1=0; c1<numContacts; c1++)
         W33[c1] = new LocalBlock33();
-    /*
-    std::vector<listElem> sortedList;
-    listElem buf;
-    sortedList.clear();
-    for (c1=0; c1<numContacts; c1++)
-    {
-        buf.value = dfree[3*c1];
-        buf.index = c1;
-        sortedList.push_back(buf);
-    }
-    */
 
     //////////////
     // Beginning of iterative computations
@@ -1785,7 +1765,7 @@ int nlcp_gaussseidelTimed(int dim, SReal *dfree, SReal**W, SReal*f, SReal mu, SR
 
             // put the previous value of the contact force in a buffer and put the current value to 0
             f_1[0] = f[3*index1]; f_1[1] = f[3*index1+1]; f_1[2] = f[3*index1+2];
-            set3Dof(f,index1,zero,zero,zero); //		f[3*index] = 0.0; f[3*index+1] = 0.0; f[3*index+2] = 0.0;
+            set3Dof(f,index1, 0, 0, 0); //		f[3*index] = 0.0; f[3*index+1] = 0.0; f[3*index+2] = 0.0;
 
             // computation of actual d due to contribution of other contacts
             dn=dfree[3*index1]; dt=dfree[3*index1+1]; ds=dfree[3*index1+2];
@@ -1820,8 +1800,6 @@ int nlcp_gaussseidelTimed(int dim, SReal *dfree, SReal**W, SReal*f, SReal mu, SR
                 for (int i = 0; i < numContacts; i++)
                     delete W33[i];
                 free(W33);
-                //printf("Convergence after %d iteration(s) with tolerance : %f and error : %f with dim : %d\n",it, tol, error, dim);
-                //afficheLCP(dfree,W,f,dim);
                 return 1;
             }
         }
@@ -1832,8 +1810,6 @@ int nlcp_gaussseidelTimed(int dim, SReal *dfree, SReal**W, SReal*f, SReal mu, SR
             for (int i = 0; i < numContacts; i++)
                 delete W33[i];
             free(W33);
-            //printf("Convergence after %d iteration(s) with tolerance : %f and error : %f with dim : %d\n",it, tol, error, dim);
-            //afficheLCP(dfree,W,f,dim);
             sofa::helper::AdvancedTimer::valSet("GS iterations", it+1);
             return 1;
         }
@@ -1847,7 +1823,7 @@ int nlcp_gaussseidelTimed(int dim, SReal *dfree, SReal**W, SReal*f, SReal mu, SR
     if (verbose)
     {
         printf("\n No convergence in nlcp_gaussseidel function : error =%f after %d iterations", error, it);
-        afficheLCP(dfree,W,f,dim);
+        printLCP(dfree,W,f,dim);
     }
 
     return 0;
@@ -1941,6 +1917,6 @@ void gaussSeidelLCP1(int dim, FemClipsReal * q, FemClipsReal ** M, FemClipsReal 
     }
 }
 
-} // namespace helper
+} // namespace sofa::helper
 
-} // namespace sofa
+

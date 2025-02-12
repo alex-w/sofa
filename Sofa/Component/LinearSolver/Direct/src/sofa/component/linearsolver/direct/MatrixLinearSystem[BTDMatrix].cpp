@@ -23,7 +23,17 @@
 #include <sofa/component/linearsolver/direct/MatrixLinearSystem[BTDMatrix].h>
 #include <sofa/component/linearsystem/MatrixLinearSystem.inl>
 
+#include <sofa/core/ObjectFactory.h>
+
 namespace sofa::component::linearsystem
 {
+
 template class SOFA_COMPONENT_LINEARSOLVER_DIRECT_API MatrixLinearSystem< linearalgebra::BTDMatrix<6, SReal>, linearalgebra::BlockVector<6, SReal> >;
+
+void registerMatrixLinearSystemBTDMatrix(sofa::core::ObjectFactory* factory)
+{
+    factory->registerObjects(core::ObjectRegistrationData("Linear system dedicated to a Band Tri Diagonal matrix.")
+        .add<MatrixLinearSystem< linearalgebra::BTDMatrix<6, SReal>, linearalgebra::BlockVector<6, SReal> > >());
+}
+
 }

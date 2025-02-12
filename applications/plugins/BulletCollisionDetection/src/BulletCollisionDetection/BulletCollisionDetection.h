@@ -145,7 +145,7 @@ protected:
         addCollisionDetection<BulletRigidCapsuleModel,BulletTriangleModel>();
         addCollisionDetection<BulletRigidCapsuleModel,BulletSphereModel>();
 
-        //if you want to take account of one of any intersection below, uncoment it,
+        //if you want to take account of one of any intersection below, uncomment it,
         //I wrote it because order is important for the collision response
         addCollisionDetection<BulletCylinderModel,BulletCylinderModel>();
         addCollisionDetection<BulletCapsuleModel,BulletCylinderModel>();
@@ -176,7 +176,7 @@ public:
     //Data<bool> useMultiSAP;
     //Data<bool> useBdvt;
 
-    Data< type::fixed_array<type::Vector3,2> > box; ///< box used if using sweep and prune
+    Data< type::fixed_array<type::Vec3,2> > box; ///< box used if using sweep and prune
 
 private:
     //sofa::set< > collisionModels;

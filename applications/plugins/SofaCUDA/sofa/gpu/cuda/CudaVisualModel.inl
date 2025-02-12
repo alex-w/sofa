@@ -29,10 +29,8 @@
 namespace sofa
 {
 
-namespace gpu
-{
 
-namespace cuda
+namespace gpu::cuda
 {
 
 extern "C"
@@ -111,14 +109,10 @@ public:
 
 #endif // SOFA_GPU_CUDA_DOUBLE
 
-} // namespace cuda
+} // namespace gpu::cuda
 
-} // namespace gpu
 
-namespace component
-{
-
-namespace visualmodel
+namespace component::visualmodel
 {
 
 using namespace gpu::cuda;
@@ -138,13 +132,13 @@ void CudaVisualModel< TDataTypes >::init()
     {
         topology = this->getContext()->getMeshTopology();
     }
-    updateVisual();
+    updateTopologyAndNormals();
 }
 
 template<class TDataTypes>
 void CudaVisualModel< TDataTypes >::reinit()
 {
-    updateVisual();
+    updateTopologyAndNormals();
 }
 
 template<class TDataTypes>
@@ -261,7 +255,7 @@ template<class TDataTypes>
 void CudaVisualModel< TDataTypes >::updateNormals()
 {
     if (!topology || !state || !state->getSize()) return;
-    const VecCoord& x = state->read(core::ConstVecCoordId::position())->getValue();
+    const VecCoord& x = state->read(core::vec_id::read_access::position)->getValue();
     fnormals.resize(nbElement);
     vnormals.resize(x.size());
     if (triangles.size() > 0)
@@ -290,11 +284,17 @@ void CudaVisualModel< TDataTypes >::updateNormals()
 }
 
 template<class TDataTypes>
-void CudaVisualModel< TDataTypes >::updateVisual()
+void CudaVisualModel< TDataTypes >::updateTopologyAndNormals()
 {
     updateTopology();
     if (computeNormals.getValue())
         updateNormals();
+}
+
+template<class TDataTypes>
+void CudaVisualModel< TDataTypes >::doUpdateVisual(const core::visual::VisualParams* vparams)
+{
+    updateTopologyAndNormals();
 }
 
 template<class TDataTypes>
@@ -370,7 +370,7 @@ void CudaVisualModel< TDataTypes >::internalDraw(const core::visual::VisualParam
 
     //TODO: Const ? Read-Only ?
     //VecCoord& x = *state->getX();
-    Data<VecCoord>* d_x = state->write(core::VecCoordId::position());
+    Data<VecCoord>* d_x = state->write(core::vec_id::write_access::position);
     VecCoord& x = *d_x->beginEdit();
 
     bool vbo = useVBO.getValue();
@@ -465,7 +465,7 @@ void CudaVisualModel< TDataTypes >::computeBBox(const core::ExecParams* params, 
     if (!state)
         return;
 
-    const VecCoord& x = state->write(core::VecCoordId::position())->getValue();
+    const VecCoord& x = state->write(core::vec_id::write_access::position)->getValue();
 
     SReal minBBox[3] = {std::numeric_limits<Real>::max(),std::numeric_limits<Real>::max(),std::numeric_limits<Real>::max()};
     SReal maxBBox[3] = {-std::numeric_limits<Real>::max(),-std::numeric_limits<Real>::max(),-std::numeric_limits<Real>::max()};
@@ -482,9 +482,8 @@ void CudaVisualModel< TDataTypes >::computeBBox(const core::ExecParams* params, 
 }
 
 
-} // namespace visualmodel
+} // namespace component::visualmodel
 
-} // namespace component
 
 } // namespace sofa
 

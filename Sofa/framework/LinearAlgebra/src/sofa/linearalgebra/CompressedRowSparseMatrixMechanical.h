@@ -27,8 +27,8 @@
 
 #include <sofa/linearalgebra/config.h>
 #include <sofa/linearalgebra/CompressedRowSparseMatrixGeneric.h>
-
 #include <sofa/type/trait/is_vector.h>
+#include <sofa/helper/narrow_cast.h>
 
 namespace sofa::linearalgebra
 {
@@ -71,13 +71,16 @@ public:
     typedef typename CRSMatrix::IndexedBlock IndexedBlock;
     typedef typename CRSMatrix::VecIndexedBlock VecIndexedBlock;
 
+    template<class TBlock2>
+    using rebind_to = CompressedRowSparseMatrixMechanical< TBlock2, Policy >;
+
     typedef Matrix Expr;
     typedef CompressedRowSparseMatrixMechanical<double> matrix_type;
     enum { category = MATRIX_SPARSE };
     enum { operand = 1 };
 
-    enum { NL = CRSMatrix::NL };  ///< Number of rows of a block
-    enum { NC = CRSMatrix::NC };  ///< Number of columns of a block
+    static constexpr sofa::Index NL = traits::NL;  ///< Number of rows of a block
+    static constexpr sofa::Index NC = traits::NC;  ///< Number of columns of a block
 
     /// Size
     Index nRow,nCol;         ///< Mathematical size of the matrix, in scalars
@@ -342,7 +345,7 @@ public:
             for (Index xj = rowRange.begin(); xj < rowRange.end(); ++xj)
             {
                 Block& b = this->colsValue[xj];
-                for (Index bj = 0; bj < NC; ++bj)
+                for (Index bj = 0; bj < (Index)NC; ++bj)
                     traits::vset(b, bi, bj, 0);
             }
         }
@@ -364,7 +367,7 @@ public:
             Block* b = this->wblock(i,j,false);
             if (b)
             {
-                for (Index bi = 0; bi < NL; ++bi)
+                for (Index bi = 0; bi < (Index)NL; ++bi)
                     traits::vset(*b, bi, bj, 0);
             }
         }
@@ -395,7 +398,7 @@ public:
                 {
                     Block* b = &this->colsValue[xj];
                     // first clear (i,j)
-                    for (Index bj = 0; bj < NC; ++bj)
+                    for (Index bj = 0; bj < (Index)NC; ++bj)
                         traits::vset(*b, bi, bj, 0);
 
                     // then clear (j,i) 
@@ -413,7 +416,7 @@ public:
                         }
                     }
 
-                    for (Index bj = 0; bj < NL; ++bj)
+                    for (Index bj = 0; bj < (Index)NL; ++bj)
                         traits::vset(*b, bj, bi, 0);
              
                 }
@@ -475,8 +478,8 @@ public:
     static bool nonzeros(Index /*i*/, Index /*j*/, Block& val, const Real /*ref*/) { return (!traits::empty(val)); }
     static bool nonsmall(Index /*i*/, Index /*j*/, Block& val, const Real   ref  )
     {
-        for (Index bi = 0; bi < NL; ++bi)
-            for (Index bj = 0; bj < NC; ++bj)
+        for (Index bi = 0; bi < (Index)NL; ++bi)
+            for (Index bj = 0; bj < (Index)NC; ++bj)
                 if (type::rabs(traits::v(val, bi, bj)) >= ref) return true;
         return false;
     }
@@ -484,7 +487,7 @@ public:
     {
         if (NL>1 && i*NL == j*NC)
         {
-            for (Index bi = 1; bi < NL; ++bi)
+            for (Index bi = 1; bi < (Index)NL; ++bi)
                 for (Index bj = 0; bj < bi; ++bj)
                     traits::vset(val, bi, bj, 0);
         }
@@ -494,8 +497,8 @@ public:
     {
         if (NL>1 && i*NL == j*NC)
         {
-            for (Index bi = 0; bi < NL-1; ++bi)
-                for (Index bj = bi+1; bj < NC; ++bj)
+            for (Index bi = 0; bi < (Index)NL-1; ++bi)
+                for (Index bj = bi+1; bj < (Index)NC; ++bj)
                     traits::vset(val, bi, bj, 0);
         }
         return i*NL >= j*NC;
@@ -506,41 +509,80 @@ public:
     static bool lower_nonsmall(Index   i  , Index   j  , Block& val, const Real   ref  ) { return lower(i,j,val,ref) && nonsmall(i,j,val,ref); }
 
     template<class TMatrix>
-    void filterValues(TMatrix& M, filter_fn* filter = &nonzeros, const Real ref = Real(), bool keepEmptyRows=false)
+    void filterValues(TMatrix& srcMatrix, filter_fn* filter = &nonzeros, const Real ref = Real(), bool keepEmptyRows=false)
     {
-        M.compress();
-        this->nBlockRow = M.rowBSize();
-        this->nBlockCol = M.colBSize();
+        static constexpr auto SrcBlockRows = TMatrix::NL;
+        static constexpr auto SrcBlockColumns = TMatrix::NC;
+
+        static constexpr auto DstBlockRows = NL;
+        static constexpr auto DstBlockColumns = NC;
+
+        static_assert(SrcBlockRows % DstBlockRows == 0);
+        static_assert(SrcBlockColumns % DstBlockColumns == 0);
+
+        static constexpr auto NbBlocksRows = SrcBlockRows / DstBlockRows;
+        static constexpr auto NbBlocksColumns = SrcBlockColumns / DstBlockColumns;
+
+        if constexpr (TMatrix::Policy::AutoCompress)
+        {
+            /// \warning this violates the const-ness of TMatrix !
+            const_cast<std::remove_const_t<TMatrix>*>(&srcMatrix)->compress();
+        }
+
+        this->nRow = srcMatrix.nBlockRow * SrcBlockRows;
+        this->nCol = srcMatrix.nBlockCol * SrcBlockColumns;
+        this->nBlockRow = srcMatrix.nBlockRow * NbBlocksRows;
+        this->nBlockCol = srcMatrix.nBlockCol * NbBlocksColumns;
         this->rowIndex.clear();
         this->rowBegin.clear();
         this->colsIndex.clear();
         this->colsValue.clear();
         this->skipCompressZero = true;
         this->btemp.clear();
-        this->rowIndex.reserve(M.rowIndex.size());
-        this->rowBegin.reserve(M.rowBegin.size());
-        this->colsIndex.reserve(M.colsIndex.size());
-        this->colsValue.reserve(M.colsValue.size());
+        this->rowIndex.reserve(srcMatrix.rowIndex.size() * NbBlocksRows);
+        this->rowBegin.reserve(srcMatrix.rowBegin.size() * NbBlocksRows);
+        this->colsIndex.reserve(srcMatrix.colsIndex.size() * NbBlocksRows * NbBlocksColumns);
+        this->colsValue.reserve(srcMatrix.colsValue.size() * NbBlocksRows * NbBlocksColumns);
 
         Index vid = 0;
-        for (Index rowId = 0; rowId < static_cast<Index>(M.rowIndex.size()); ++rowId)
+        for (Index srcRowId = 0; srcRowId < static_cast<Index>(srcMatrix.rowIndex.size()); ++srcRowId)
         {
-            Index i = M.rowIndex[rowId];
-            this->rowIndex.push_back(i);
-            this->rowBegin.push_back(vid);
-            Range rowRange(M.rowBegin[rowId], M.rowBegin[rowId+1]);
-            for (Index xj = rowRange.begin(); xj < rowRange.end(); ++xj)
+            // row id if blocks were scalars
+            const Index scalarRowId = srcMatrix.rowIndex[srcRowId] * SrcBlockRows;
+
+            Range rowRange(srcMatrix.rowBegin[srcRowId], srcMatrix.rowBegin[srcRowId+1]);
+            for (Index subRow = 0; subRow < sofa::helper::narrow_cast<Index>(NbBlocksRows); ++subRow)
             {
-                Index j = M.colsIndex[xj];
-                Block b = M.colsValue[xj];
-                if ((*filter)(i,j,b,ref))
+                const auto oldVid = vid;
+
+                for (std::size_t xj = static_cast<std::size_t>(rowRange.begin()); xj < static_cast<std::size_t>(rowRange.end()); ++xj)
                 {
-                    this->colsIndex.push_back(j);
-                    this->colsValue.push_back(b);
-                    ++vid;
+                    // col id if blocks were scalars
+                    const Index scalarColId = srcMatrix.colsIndex[xj] * SrcBlockColumns;
+                    const typename TMatrix::Block& srcBlock = srcMatrix.colsValue[xj];
+
+                    for (Index subCol = 0; subCol < sofa::helper::narrow_cast<Index>(NbBlocksColumns); ++subCol)
+                    {
+                        Block subBlock;
+                        matrix_bloc_traits<typename TMatrix::Block, sofa::SignedIndex>::subBlock(srcBlock, subRow * DstBlockRows, subCol * DstBlockColumns, subBlock);
+
+                        if ((*filter)(scalarRowId / DstBlockRows + subRow, scalarColId / DstBlockColumns + subCol, subBlock, ref))
+                        {
+                            this->colsIndex.push_back(scalarColId / DstBlockColumns + subCol);
+                            this->colsValue.push_back(subBlock);
+                            ++vid;
+                        }
+                    }
+                }
+
+                if (oldVid != vid) //check in case all sub-blocks have been filtered out
+                {
+                    this->rowIndex.push_back(scalarRowId / DstBlockRows + subRow);
+                    this->rowBegin.push_back(oldVid);
                 }
             }
-            if (!keepEmptyRows && this->rowBegin.back() == vid) // row was empty
+
+            if (!keepEmptyRows && !this->rowBegin.empty() && this->rowBegin.back() == vid) // row was empty
             {
                 this->rowIndex.pop_back();
                 this->rowBegin.pop_back();
@@ -628,8 +670,8 @@ protected:
     {
         Index index = b->data;
         const Block& data = (index >= 0) ? this->colsValue[index] : this->btemp[-index-1].value;
-        for (Index l=0; l<NL; ++l)
-            for (Index c=0; c<NC; ++c)
+        for (Index l=0; l < (Index)NL; ++l)
+            for (Index c=0; c < (Index)NC; ++c)
                 buffer[l*NC+c] = static_cast<T>(traits::v(data, l, c));
         return buffer;
     }
@@ -651,8 +693,8 @@ protected:
     {
         Index index = b->data;
         Block& data = (index >= 0) ? this->colsValue[index] : this->btemp[-index-1].value;
-        for (Index l=0; l<NL; ++l)
-            for (Index c=0; c<NC; ++c)
+        for (Index l=0; l <( Index)NL; ++l)
+            for (Index c=0; c < (Index)NC; ++c)
                 traits::vset(data, l, c, static_cast<Real>(buffer[l*NC+c]) );
     }
     virtual void bAccessorSet(InternalBlockAccessor* b, const float* buffer) override
@@ -673,8 +715,8 @@ protected:
     {
         Index index = b->data;
         Block& data = (index >= 0) ? this->colsValue[index] : this->btemp[-index-1].value;
-        for (Index l=0; l<NL; ++l)
-            for (Index c=0; c<NC; ++c)
+        for (Index l=0; l < (Index)NL; ++l)
+            for (Index c=0; c < (Index)NC; ++c)
                 traits::vadd(data, l, c,static_cast<Real>(buffer[l*NC+c]) );
     }
     virtual void bAccessorAdd(InternalBlockAccessor* b, const float* buffer) override
@@ -959,8 +1001,8 @@ protected:
     //            Index rowIndex = this->rowIndex[xi] * NL;
     //            Index colIndex = this->colsIndex[xj] * NC;
     //            std::copy(vec.begin() + colIndex, vec.begin() + colIndex + NC, vi.begin());
-    //            for (Index bi = 0; bi < NL; ++bi)
-    //                for (Index bj = 0; bj < NC; ++bj)
+    //            for (Index bi = 0; bi < (Index)NL; ++bi)
+    //                for (Index bj = 0; bj < (Index)NC; ++bj)
     //                    res[rowIndex + bi] += traits::v(b, bi, bj) * vi[bj];
 
     //            if constexpr (!Policy::StoreLowerTriangularBlock)
@@ -969,8 +1011,8 @@ protected:
     //                {
     //                    sofa::type::Vec<NL,Real2> vj;
     //                    std::copy(vec.begin() + rowIndex, vec.begin() + rowIndex + NL, vj.begin());
-    //                    for (Index bi = 0; bi < NL; ++bi)
-    //                        for (Index bj = 0; bj < NC; ++bj)
+    //                    for (Index bi = 0; bi < (Index)NL; ++bi)
+    //                        for (Index bj = 0; bj < (Index)NC; ++bj)
     //                            res[colIndex + bi] += traits::v(b, bj, bi) * vj[bj];
     //                }
     //            }
@@ -997,19 +1039,19 @@ protected:
                 // transfer a chunk of large vector to a local block-sized vector
                 type::Vec<NC, Real2> v;
                 //Index jN = colsIndex[xj] * NC;    // scalar column index
-                for (Index bj = 0; bj < NC; ++bj)
+                for (Index bj = 0; bj < (Index)NC; ++bj)
                     v[bj] = vget(vec, this->colsIndex[xj], NC, bj);
 
                 // multiply the block with the local vector
                 const Block& b = this->colsValue[xj];    // non-null block has block-indices (rowIndex[xi],colsIndex[xj]) and value colsValue[xj]
-                for (Index bi = 0; bi < NL; ++bi)
-                    for (Index bj = 0; bj < NC; ++bj)
+                for (Index bi = 0; bi < (Index)NL; ++bi)
+                    for (Index bj = 0; bj < (Index)NC; ++bj)
                         r[bi] += traits::v(b, bi, bj) * v[bj];
             }
 
             // transfer the local result  to the large result vector
             //Index iN = rowIndex[xi] * NL;                      // scalar row index
-            for (Index bi = 0; bi < NL; ++bi)
+            for (Index bi = 0; bi < (Index)NL; ++bi)
                 vset(res, this->rowIndex[xi], NL, bi, r[bi]);
         }
     }
@@ -1034,8 +1076,8 @@ protected:
                 Index rowIndex = this->rowIndex[xi] * NL;
                 Index colIndex = this->colsIndex[xj] * NC;
                 std::copy(vec.begin() + colIndex, vec.begin() + colIndex + NC, vi.begin());
-                for (Index bi = 0; bi < NL; ++bi)
-                    for (Index bj = 0; bj < NC; ++bj)
+                for (Index bi = 0; bi < (Index)NL; ++bi)
+                    for (Index bj = 0; bj < (Index)NC; ++bj)
                         res[rowIndex + bi] += traits::v(b, bi, bj) * vi[bj];
 
                 if constexpr (!Policy::StoreLowerTriangularBlock)
@@ -1044,8 +1086,8 @@ protected:
                     {
                         sofa::type::Vec<NL,Real2> vj;
                         std::copy(vec.begin() + rowIndex, vec.begin() + rowIndex + NL, vj.begin());
-                        for (Index bi = 0; bi < NL; ++bi)
-                            for (Index bj = 0; bj < NC; ++bj)
+                        for (Index bi = 0; bi < (Index)NL; ++bi)
+                            for (Index bj = 0; bj < (Index)NC; ++bj)
                                 res[colIndex + bi] += traits::v(b, bj, bi) * vj[bj];
                     }
                 }
@@ -1071,16 +1113,16 @@ protected:
                 const Block& b = this->colsValue[xj];
                 Index rowIndex = this->rowIndex[xi] * NL;
                 Index colIndex = this->colsIndex[xj] * NC;
-                for (Index bi = 0; bi < NL; ++bi)
-                    for (Index bj = 0; bj < NC; ++bj)
+                for (Index bi = 0; bi < (Index)NL; ++bi)
+                    for (Index bj = 0; bj < (Index)NC; ++bj)
                         res[rowIndex + bi] += traits::v(b, bi, bj) * vec[bj];
 
                 if constexpr (!Policy::StoreLowerTriangularBlock)
                 {
                     if (colIndex != rowIndex)
                     {
-                        for (Index bi = 0; bi < NL; ++bi)
-                            for (Index bj = 0; bj < NC; ++bj)
+                        for (Index bi = 0; bi < (Index)NL; ++bi)
+                            for (Index bj = 0; bj < (Index)NC; ++bj)
                                 res[colIndex + bi] += traits::v(b, bj, bi) * vec[bj];
                     }
                 }
@@ -1108,7 +1150,7 @@ protected:
             // copy the corresponding chunk of the input to a local vector
             type::Vec<NL,Real2> v;
             //Index iN = rowIndex[xi] * NL;    // index of the row in the vector
-            for (Index bi = 0; bi < NL; ++bi)
+            for (Index bi = 0; bi < (Index)NL; ++bi)
                 v[bi] = vget(vec, this->rowIndex[xi], NL, bi);
 
             // accumulate the product of the column with the local vector
@@ -1121,14 +1163,14 @@ protected:
                 //Index jN = colsIndex[xj] * NC;
 
                 // columnwise block-vector product
-                for (Index bj = 0; bj < NC; ++bj)
+                for (Index bj = 0; bj < (Index)NC; ++bj)
                     r[bj] = traits::v(b, 0, bj) * v[0];
-                for (Index bi = 1; bi < NL; ++bi)
-                    for (Index bj = 0; bj < NC; ++bj)
+                for (Index bi = 1; bi < (Index)NL; ++bi)
+                    for (Index bj = 0; bj < (Index)NC; ++bj)
                         r[bj] += traits::v(b, bi, bj) * v[bi];
 
                 // accumulate the product to the result
-                for (Index bj = 0; bj < NC; ++bj)
+                for (Index bj = 0; bj < (Index)NC; ++bj)
                     vadd(res, this->colsIndex[xj], NC, bj, r[bj]);
             }
         }
@@ -1157,7 +1199,7 @@ public:
 
     /// equal result = this * v
     /// @warning The block sizes must be compatible ie v.size() must be a multiple of block size.
-    template< typename V1, typename V2, std::enable_if_t<sofa::type::trait::is_vector<V1>::value && sofa::type::trait::is_vector<V2>::value, int> = 0 >
+    template< sofa::type::trait::is_vector V1, sofa::type::trait::is_vector V2>
     void mul( V2& result, const V1& v ) const
     {
         this-> template tmul< Real, V2, V1 >(result, v);
@@ -1237,8 +1279,8 @@ public:
             {
                 Index jN = this->colsIndex[xj] * NC;
                 const Block& b = this->colsValue[xj];
-                for (Index bi = 0; bi < NL; ++bi)
-                    for (Index bj = 0; bj < NC; ++bj)
+                for (Index bi = 0; bi < (Index)NL; ++bi)
+                    for (Index bj = 0; bj < (Index)NC; ++bj)
                         dest->add(iN+bi, jN+bj, traits::v(b, bi, bj));
             }
         }
@@ -1249,8 +1291,8 @@ public:
                 Index iN = it->l * NL;
                 Index jN = it->c * NC;
                 const Block& b = it->value;
-                for (Index bi = 0; bi < NL; ++bi)
-                    for (Index bj = 0; bj < NC; ++bj)
+                for (Index bi = 0; bi < (Index)NL; ++bi)
+                    for (Index bj = 0; bj < (Index)NC; ++bj)
                         dest->add(iN+bi, jN+bj, traits::v(b, bi, bj));
             }
         }
@@ -1309,7 +1351,7 @@ public:
     template<class TBlock2, class TPolicy2>
     void operator-=(const CompressedRowSparseMatrixMechanical<TBlock2, TPolicy2>& m)
     {
-        equal(MatrixExpr< MatrixNegative< CompressedRowSparseMatrixMechanical<TBlock2, TPolicy2> > >(MatrixNegative< CompressedRowSparseMatrixMechanical<TBlock2, TPolicy2> >(m)), true);
+        equal(MatrixExpr { MatrixNegative< CompressedRowSparseMatrixMechanical<TBlock2, TPolicy2> >(m) }, true);
     }
 
     template<class Expr2>
@@ -1327,23 +1369,23 @@ public:
     template<class Expr2>
     void operator-=(const MatrixExpr< Expr2 >& m)
     {
-        addEqual(MatrixExpr< MatrixNegative< Expr2 > >(MatrixNegative< Expr2 >(m)));
+        addEqual(MatrixExpr{ MatrixNegative< Expr2 >(m) } );
     }
 
     MatrixExpr< MatrixTranspose< Matrix > > t() const
     {
-        return MatrixExpr< MatrixTranspose< Matrix > >(MatrixTranspose< Matrix >(*this));
+        return MatrixExpr{ MatrixTranspose< Matrix >{*this} };
     }
 
 
     MatrixExpr< MatrixNegative< Matrix > > operator-() const
     {
-        return MatrixExpr< MatrixNegative< Matrix > >(MatrixNegative< Matrix >(*this));
+        return MatrixExpr{ MatrixNegative< Matrix >(*this) };
     }
 
     MatrixExpr< MatrixScale< Matrix, double > > operator*(const double& r) const
     {
-        return MatrixExpr< MatrixScale< Matrix, double > >(MatrixScale< Matrix, double >(*this, r));
+        return MatrixExpr{ MatrixScale< Matrix, double >(*this, r) };
     }
 
 
@@ -1363,11 +1405,6 @@ template<> void SOFA_LINEARALGEBRA_API CompressedRowSparseMatrixMechanical<type:
 template<> void SOFA_LINEARALGEBRA_API CompressedRowSparseMatrixMechanical<type::Mat3x3d >::add(Index row, Index col, const type::Mat3x3f& _M);
 template<> void SOFA_LINEARALGEBRA_API CompressedRowSparseMatrixMechanical<type::Mat3x3f >::add(Index row, Index col, const type::Mat3x3d& _M);
 template<> void SOFA_LINEARALGEBRA_API CompressedRowSparseMatrixMechanical<type::Mat3x3f >::add(Index row, Index col, const type::Mat3x3f& _M);
-
-template<> template<> void SOFA_LINEARALGEBRA_API CompressedRowSparseMatrixMechanical<double>::filterValues<CompressedRowSparseMatrixMechanical<type::Mat3x3d > >(CompressedRowSparseMatrixMechanical<type::Mat<3, 3, double> >& M, filter_fn* filter, const Real ref, bool keepEmptyRows);
-template<> template<> void SOFA_LINEARALGEBRA_API CompressedRowSparseMatrixMechanical<double>::filterValues<CompressedRowSparseMatrixMechanical<type::Mat3x3f > >(CompressedRowSparseMatrixMechanical<type::Mat<3, 3, float> >& M, filter_fn* filter, const Real ref, bool keepEmptyRows);
-template<> template<> void SOFA_LINEARALGEBRA_API CompressedRowSparseMatrixMechanical<float>::filterValues<CompressedRowSparseMatrixMechanical<type::Mat3x3f > >(CompressedRowSparseMatrixMechanical<type::Mat<3, 3, float> >& M, filter_fn* filter, const Real ref, bool keepEmptyRows);
-template<> template<> void SOFA_LINEARALGEBRA_API CompressedRowSparseMatrixMechanical<float>::filterValues<CompressedRowSparseMatrixMechanical<type::Mat3x3d > >(CompressedRowSparseMatrixMechanical<type::Mat<3, 3, double> >& M, filter_fn* filter, const Real ref, bool keepEmptyRows);
 
 #if !defined(SOFA_COMPONENT_LINEARSOLVER_COMPRESSEDROWSPARSEMATRIXMECHANICAL_CPP) 
 extern template class SOFA_LINEARALGEBRA_API CompressedRowSparseMatrixMechanical<float>;

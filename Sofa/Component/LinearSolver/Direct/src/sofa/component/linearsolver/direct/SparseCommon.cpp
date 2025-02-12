@@ -19,8 +19,6 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-
-
 #include <sofa/component/linearsolver/direct/SparseCommon.h>
 
 namespace sofa::component::linearsolver::direct
@@ -84,16 +82,6 @@ void csrToAdj(int n, int * M_colptr, int * M_rowind, type::vector<int>& adj, typ
 
         xadj[j+1] = adj.size();
     }
-}
-
-
-void fillReducingPermutation(const cs &A,int * perm,int * invperm)
-{
-    int n = A.n;
-    sofa::type::vector<int> adj, xadj, t_adj, t_xadj, tran_countvec;
-    csrToAdj( A.n, A.p , A.i , adj, xadj, t_adj, t_xadj, tran_countvec );
-    METIS_NodeND(&n, xadj.data(), adj.data(), nullptr, nullptr, perm, invperm);
-
 }
 
 }

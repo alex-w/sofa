@@ -25,10 +25,8 @@
 #include <cassert>
 #include <iostream>
 
-namespace sofa
-{
 
-namespace core
+namespace sofa::core
 {
 
 MechanicalParams::MechanicalParams(const sofa::core::ExecParams& p)
@@ -36,11 +34,11 @@ MechanicalParams::MechanicalParams(const sofa::core::ExecParams& p)
     , m_dt(0.0)
     , m_implicit(false)
     , m_energy(false)
-    , m_x (ConstVecCoordId::position())
-    , m_v (ConstVecDerivId::velocity())
-    , m_f (ConstVecDerivId::force())
-    , m_dx(ConstVecDerivId::dx())
-    , m_df(ConstVecDerivId::dforce())
+    , m_x (vec_id::read_access::position)
+    , m_v (vec_id::read_access::velocity)
+    , m_f (vec_id::read_access::force)
+    , m_dx(vec_id::read_access::dx)
+    , m_df(vec_id::read_access::dforce)
     , m_mFactor(0)
     , m_bFactor(0)
     , m_kFactor(0)
@@ -97,16 +95,10 @@ MechanicalParams* MechanicalParams::operator= ( const MechanicalParams& mparams 
 
 const MechanicalParams* MechanicalParams::defaultInstance()
 {
-    SOFA_THREAD_SPECIFIC_PTR(MechanicalParams, threadParams);
-    MechanicalParams* ptr = threadParams;
-    if (!ptr)
-    {
-        ptr = new MechanicalParams;
-        threadParams = ptr;
-    }
-    return ptr;
+    thread_local MechanicalParams threadParams;
+    return &threadParams;
 }
 
-} // namespace core
+} // namespace sofa::core
 
-} // namespace sofa
+

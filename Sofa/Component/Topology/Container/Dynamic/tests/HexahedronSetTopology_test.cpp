@@ -73,7 +73,7 @@ bool HexahedronSetTopology_test::testEmptyContainer()
 
 bool HexahedronSetTopology_test::testHexahedronBuffers()
 {
-    fake_TopologyScene* scene = new fake_TopologyScene("mesh/nine_hexa.msh", sofa::core::topology::TopologyElementType::HEXAHEDRON);
+    fake_TopologyScene* scene = new fake_TopologyScene("mesh/nine_hexa.msh", sofa::geometry::ElementType::HEXAHEDRON);
     HexahedronSetTopologyContainer* topoCon = dynamic_cast<HexahedronSetTopologyContainer*>(scene->getNode().get()->getMeshTopology());
 
     if (topoCon == nullptr)
@@ -147,7 +147,7 @@ bool HexahedronSetTopology_test::testHexahedronBuffers()
 
 bool HexahedronSetTopology_test::testQuadBuffers()
 {
-    fake_TopologyScene* scene = new fake_TopologyScene("mesh/nine_hexa.msh", sofa::core::topology::TopologyElementType::HEXAHEDRON);
+    fake_TopologyScene* scene = new fake_TopologyScene("mesh/nine_hexa.msh", sofa::geometry::ElementType::HEXAHEDRON);
     HexahedronSetTopologyContainer* topoCon = dynamic_cast<HexahedronSetTopologyContainer*>(scene->getNode().get()->getMeshTopology());
 
     if (topoCon == nullptr)
@@ -188,7 +188,7 @@ bool HexahedronSetTopology_test::testQuadBuffers()
     EXPECT_EQ(elemAQuad[1], 1);
 
 
-    // check QuadsInHexahedron buffer acces
+    // check QuadsInHexahedron buffer access
     const sofa::type::vector< HexahedronSetTopologyContainer::QuadsInHexahedron > & quadInHexahedra = topoCon->getQuadsInHexahedronArray();
     EXPECT_EQ(quadInHexahedra.size(), nbrHexahedron);
 
@@ -245,7 +245,7 @@ bool HexahedronSetTopology_test::testQuadBuffers()
 
 bool HexahedronSetTopology_test::testEdgeBuffers()
 {
-    fake_TopologyScene* scene = new fake_TopologyScene("mesh/nine_hexa.msh", sofa::core::topology::TopologyElementType::HEXAHEDRON);
+    fake_TopologyScene* scene = new fake_TopologyScene("mesh/nine_hexa.msh", sofa::geometry::ElementType::HEXAHEDRON);
     HexahedronSetTopologyContainer* topoCon = dynamic_cast<HexahedronSetTopologyContainer*>(scene->getNode().get()->getMeshTopology());
 
     if (topoCon == nullptr)
@@ -283,7 +283,7 @@ bool HexahedronSetTopology_test::testEdgeBuffers()
     EXPECT_EQ(elemAEdge[1], 2);
 
 
-    // check EdgesInHexahedron buffer acces
+    // check EdgesInHexahedron buffer access
     const sofa::type::vector< HexahedronSetTopologyContainer::EdgesInHexahedron > & edgeInHexahedra = topoCon->getEdgesInHexahedronArray();
     EXPECT_EQ(edgeInHexahedra.size(), nbrHexahedron);
 
@@ -340,7 +340,7 @@ bool HexahedronSetTopology_test::testEdgeBuffers()
 
 bool HexahedronSetTopology_test::testVertexBuffers()
 {
-    fake_TopologyScene* scene = new fake_TopologyScene("mesh/nine_hexa.msh", sofa::core::topology::TopologyElementType::HEXAHEDRON);
+    fake_TopologyScene* scene = new fake_TopologyScene("mesh/nine_hexa.msh", sofa::geometry::ElementType::HEXAHEDRON);
     HexahedronSetTopologyContainer* topoCon = dynamic_cast<HexahedronSetTopologyContainer*>(scene->getNode().get()->getMeshTopology());
 
     if (topoCon == nullptr)
@@ -385,7 +385,7 @@ bool HexahedronSetTopology_test::testVertexBuffers()
 
 bool HexahedronSetTopology_test::checkTopology()
 {
-    fake_TopologyScene* scene = new fake_TopologyScene("mesh/nine_hexa.msh", sofa::core::topology::TopologyElementType::HEXAHEDRON);
+    fake_TopologyScene* scene = new fake_TopologyScene("mesh/nine_hexa.msh", sofa::geometry::ElementType::HEXAHEDRON);
     const HexahedronSetTopologyContainer* topoCon = dynamic_cast<HexahedronSetTopologyContainer*>(scene->getNode().get()->getMeshTopology());
 
     if (topoCon == nullptr)

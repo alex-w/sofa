@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.22)
 project(Sofa.Core LANGUAGES CXX)
 
 set(SRC_ROOT "src/sofa/core")
@@ -17,6 +17,7 @@ set(HEADER_FILES
     ${SRC_ROOT}/CollisionModel.h
     ${SRC_ROOT}/ComponentLibrary.h
     ${SRC_ROOT}/ComponentNameHelper.h
+    ${SRC_ROOT}/ConstraintOrder.h
     ${SRC_ROOT}/ConstraintParams.h
     ${SRC_ROOT}/DataEngine.h
     ${SRC_ROOT}/DataTracker.h
@@ -27,9 +28,11 @@ set(HEADER_FILES
     ${SRC_ROOT}/ExecParams.h
     ${SRC_ROOT}/fwd.h
     ${SRC_ROOT}/init.h
+    ${SRC_ROOT}/IntrusiveObject.h
     ${SRC_ROOT}/Mapping.h
     ${SRC_ROOT}/Mapping.inl
     ${SRC_ROOT}/MappingHelper.h
+    ${SRC_ROOT}/MatricesFactors.h
     ${SRC_ROOT}/MatrixAccumulator.h
     ${SRC_ROOT}/MechanicalParams.h
     ${SRC_ROOT}/MechanicalStatesMatrixAccumulators.h
@@ -39,6 +42,7 @@ set(HEADER_FILES
     ${SRC_ROOT}/MultiMapping.inl
     ${SRC_ROOT}/MultiVecId.h
     ${SRC_ROOT}/ObjectFactory.h
+    ${SRC_ROOT}/ObjectFactoryJson.h
     ${SRC_ROOT}/PathResolver.h
     ${SRC_ROOT}/SofaLibrary.h
     ${SRC_ROOT}/sptr.h
@@ -60,6 +64,7 @@ set(HEADER_FILES
     ${SRC_ROOT}/behavior/BaseMass.h
     ${SRC_ROOT}/behavior/BaseMatrixLinearSystem.h
     ${SRC_ROOT}/behavior/BaseMechanicalState.h
+    ${SRC_ROOT}/behavior/BaseOrderingMethod.h
     ${SRC_ROOT}/behavior/BaseProjectiveConstraintSet.h
     ${SRC_ROOT}/behavior/BaseRotationFinder.h
     ${SRC_ROOT}/behavior/BaseVectorOperations.h
@@ -75,6 +80,7 @@ set(HEADER_FILES
     ${SRC_ROOT}/behavior/ForceField.h
     ${SRC_ROOT}/behavior/ForceField.inl
     ${SRC_ROOT}/behavior/LinearSolver.h
+    ${SRC_ROOT}/behavior/LinearSolverAccessor.h
     ${SRC_ROOT}/behavior/MatrixAPICompatibility.h
     ${SRC_ROOT}/behavior/Mass.h
     ${SRC_ROOT}/behavior/Mass.inl
@@ -145,8 +151,6 @@ set(HEADER_FILES
     ${SRC_ROOT}/objectmodel/DataFileName.h
     ${SRC_ROOT}/objectmodel/DataFileNameVector.h
     ${SRC_ROOT}/objectmodel/DataLink.h
-    ${SRC_ROOT}/objectmodel/DeprecatedData.h
-    ${SRC_ROOT}/objectmodel/RemovedData.h
     ${SRC_ROOT}/objectmodel/DetachNodeEvent.h
     ${SRC_ROOT}/objectmodel/Event.h
     ${SRC_ROOT}/objectmodel/GUIEvent.h
@@ -155,6 +159,9 @@ set(HEADER_FILES
     ${SRC_ROOT}/objectmodel/JoystickEvent.h
     ${SRC_ROOT}/objectmodel/KeypressedEvent.h
     ${SRC_ROOT}/objectmodel/KeyreleasedEvent.h
+    ${SRC_ROOT}/objectmodel/lifecycle/DeprecatedData.h
+    ${SRC_ROOT}/objectmodel/lifecycle/RemovedData.h
+    ${SRC_ROOT}/objectmodel/lifecycle/RenamedData.h
     ${SRC_ROOT}/objectmodel/Link.h
     ${SRC_ROOT}/objectmodel/MouseEvent.h
     ${SRC_ROOT}/objectmodel/SPtr.h
@@ -180,6 +187,8 @@ set(HEADER_FILES
     ${SRC_ROOT}/topology/TopologySubsetData.inl
     ${SRC_ROOT}/topology/TopologySubsetData.cpp
     ${SRC_ROOT}/topology/TopologySubsetIndices.h
+    ${SRC_ROOT}/trait/DataTypes.h
+    ${SRC_ROOT}/visual/BaseVisualStyle.h
     ${SRC_ROOT}/visual/Data[DisplayFlags].h
     ${SRC_ROOT}/visual/DisplayFlags.h
     ${SRC_ROOT}/visual/FlagTreeItem.h
@@ -209,6 +218,7 @@ set(SOURCE_FILES
     ${SRC_ROOT}/DataTrackerCallback.cpp
     ${SRC_ROOT}/DataTrackerFunctor.cpp
     ${SRC_ROOT}/ExecParams.cpp
+    ${SRC_ROOT}/IntrusiveObject.cpp
     ${SRC_ROOT}/fwd.cpp
     ${SRC_ROOT}/init.cpp
     ${SRC_ROOT}/Mapping.cpp
@@ -217,6 +227,7 @@ set(SOURCE_FILES
     ${SRC_ROOT}/Multi2Mapping.cpp
     ${SRC_ROOT}/MultiMapping.cpp
     ${SRC_ROOT}/ObjectFactory.cpp
+    ${SRC_ROOT}/ObjectFactoryJson.cpp
     ${SRC_ROOT}/PathResolver.cpp
     ${SRC_ROOT}/SofaLibrary.cpp
     ${SRC_ROOT}/State.cpp
@@ -231,6 +242,7 @@ set(SOURCE_FILES
     ${SRC_ROOT}/behavior/BaseMass.cpp
     ${SRC_ROOT}/behavior/BaseMatrixLinearSystem.cpp
     ${SRC_ROOT}/behavior/BaseMechanicalState.cpp
+    ${SRC_ROOT}/behavior/BaseOrderingMethod.cpp
     ${SRC_ROOT}/behavior/BaseProjectiveConstraintSet.cpp
     ${SRC_ROOT}/behavior/Constraint.cpp
     ${SRC_ROOT}/behavior/ConstraintCorrection.cpp
@@ -239,6 +251,7 @@ set(SOURCE_FILES
     ${SRC_ROOT}/behavior/DefaultMultiMatrixAccessor.cpp
     ${SRC_ROOT}/behavior/ForceField.cpp
     ${SRC_ROOT}/behavior/LinearSolver.cpp
+    ${SRC_ROOT}/behavior/LinearSolverAccessor.cpp
     ${SRC_ROOT}/behavior/Mass.cpp
     ${SRC_ROOT}/behavior/MechanicalMatrix.cpp
     ${SRC_ROOT}/behavior/MechanicalState.cpp
@@ -286,7 +299,6 @@ set(SOURCE_FILES
     ${SRC_ROOT}/objectmodel/DataFileNameVector.cpp
     ${SRC_ROOT}/objectmodel/DataLink.cpp
     ${SRC_ROOT}/objectmodel/DetachNodeEvent.cpp
-    ${SRC_ROOT}/objectmodel/DeprecatedData.cpp
     ${SRC_ROOT}/objectmodel/Event.cpp
     ${SRC_ROOT}/objectmodel/GUIEvent.cpp
     ${SRC_ROOT}/objectmodel/HapticDeviceEvent.cpp
@@ -294,6 +306,7 @@ set(SOURCE_FILES
     ${SRC_ROOT}/objectmodel/JoystickEvent.cpp
     ${SRC_ROOT}/objectmodel/KeypressedEvent.cpp
     ${SRC_ROOT}/objectmodel/KeyreleasedEvent.cpp
+    ${SRC_ROOT}/objectmodel/lifecycle/DeprecatedData.cpp
     ${SRC_ROOT}/objectmodel/MouseEvent.cpp
     ${SRC_ROOT}/objectmodel/ScriptEvent.cpp
     ${SRC_ROOT}/objectmodel/Tag.cpp
@@ -305,6 +318,7 @@ set(SOURCE_FILES
     ${SRC_ROOT}/topology/Topology.cpp
     ${SRC_ROOT}/topology/TopologyChange.cpp
     ${SRC_ROOT}/topology/TopologyHandler.cpp
+    ${SRC_ROOT}/topology/TopologyData.cpp
     ${SRC_ROOT}/topology/TopologySubsetIndices.cpp
     ${SRC_ROOT}/visual/Data[DisplayFlags].cpp
     ${SRC_ROOT}/visual/DisplayFlags.cpp
@@ -341,12 +355,6 @@ endif()
 if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     # Silence attribute warnings (for example, ignored already defined external template)
     target_compile_options(${PROJECT_NAME} PRIVATE -Wno-attributes)
-endif()
-
-# SOFA-NG: make everybody be able to use Sofa.Component.Compat
-sofa_find_package(Sofa.Component.Compat QUIET)
-if(Sofa.Component.Compat_FOUND)
-    target_link_libraries(${PROJECT_NAME} PUBLIC Sofa.Component.Compat)
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER Sofa.Framework) # IDE folder

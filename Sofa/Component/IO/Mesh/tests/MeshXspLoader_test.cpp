@@ -22,7 +22,7 @@
 #include <sofa/testing/BaseSimulationTest.h>
 using sofa::testing::BaseSimulationTest;
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 using sofa::simulation::Node;
 
 class MeshXspLoader_test : public BaseSimulationTest
@@ -34,7 +34,8 @@ public:
         const auto simulation = sofa::simpleapi::createSimulation();
         const Node::SPtr root = sofa::simpleapi::createRootNode(simulation, "root");
 
-        sofa::simpleapi::createObject(root, "RequiredPlugin", { { "name","Sofa.Component.IO.Mesh" } });
+        sofa::simpleapi::createObject(root, "DefaultAnimationLoop");
+        sofa::simpleapi::createObject(root, "RequiredPlugin", { { "name",Sofa.Component.IO.Mesh } });
         auto loader = sofa::simpleapi::createObject(root, "MeshXspLoader",
                                       {{"filename", std::string(SOFA_COMPONENT_IO_MESH_TEST_FILES_DIR)+"test.xs3"}});
         sofa::simulation::node::initRoot(root.get());
@@ -47,6 +48,7 @@ public:
     {
         const auto simulation = sofa::simpleapi::createSimulation();
         const Node::SPtr root = sofa::simpleapi::createRootNode(simulation, "root");
+        sofa::simpleapi::createObject(root, "DefaultAnimationLoop");
 
         {
             EXPECT_MSG_EMIT(Error);

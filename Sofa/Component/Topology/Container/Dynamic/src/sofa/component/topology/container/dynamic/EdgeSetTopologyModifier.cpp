@@ -35,15 +35,18 @@
 #include <boost/graph/connected_components.hpp>
 #include <boost/graph/cuthill_mckee_ordering.hpp>
 #include <boost/graph/bandwidth.hpp>
+#include <sofa/helper/ScopedAdvancedTimer.h>
+
 
 namespace sofa::component::topology::container::dynamic
 {
-using namespace sofa::defaulttype;
-int EdgeSetTopologyModifierClass = core::RegisterObject("Edge set topology modifier")
-        .add< EdgeSetTopologyModifier >();
 
-using namespace std;
-using namespace sofa::defaulttype;
+void registerEdgeSetTopologyModifier(sofa::core::ObjectFactory* factory)
+{
+    factory->registerObjects(core::ObjectRegistrationData("Topology modifier dedicated to an edge topology.")
+        .add< EdgeSetTopologyModifier >());
+}
+
 using namespace sofa::core::topology;
 
 void EdgeSetTopologyModifier::init()
@@ -181,7 +184,7 @@ void EdgeSetTopologyModifier::addEdgesWarning(const sofa::Size nEdges,
         for (size_t j=0; j<ancestorElems[i].srcElems.size(); ++j)
         {
             sofa::core::topology::TopologyElemID src = ancestorElems[i].srcElems[j];
-            if (src.type == sofa::core::topology::TopologyElementType::EDGE && src.index != sofa::InvalidID)
+            if (src.type == sofa::geometry::ElementType::EDGE && src.index != sofa::InvalidID)
                 ancestors[i].push_back(src.index);
         }
         if (!ancestors[i].empty())
@@ -229,7 +232,7 @@ void EdgeSetTopologyModifier::removeEdgesProcess(const sofa::type::vector<EdgeID
     size_t lastEdgeIndex = m_container->getNumberOfEdges() - 1;
     for (size_t i=0; i<indices.size(); ++i, --lastEdgeIndex)
     {
-        // now updates the shell information of the edge formely at the end of the array
+        // now updates the shell information of the edge formerly at the end of the array
         if(m_container->hasEdgesAroundVertex())
         {
 
@@ -267,7 +270,7 @@ void EdgeSetTopologyModifier::removeEdgesProcess(const sofa::type::vector<EdgeID
 
         // removes the edge from the edgelist
         m_edge[ indices[i] ] = m_edge[ lastEdgeIndex ]; // overwriting with last valid value.
-        m_edge.resize( lastEdgeIndex ); // resizing to erase multiple occurence of the edge.
+        m_edge.resize( lastEdgeIndex ); // resizing to erase multiple occurrence of the edge.
     }
 
     if (! vertexToBeRemoved.empty())
@@ -622,7 +625,7 @@ void EdgeSetTopologyModifier::splitEdgesProcess(sofa::type::vector<EdgeID> &indi
 void EdgeSetTopologyModifier::removeEdges(const sofa::type::vector< EdgeID >& edgeIds,
         const bool removeIsolatedPoints)
 {
-    sofa::helper::AdvancedTimer::stepBegin("removeEdges");
+    SCOPED_TIMER_VARNAME(removeEdgesTimer, "removeEdges");
 
     sofa::type::vector<EdgeID> edgeIds_filtered;
     for (size_t i = 0; i < edgeIds.size(); i++)
@@ -634,21 +637,24 @@ void EdgeSetTopologyModifier::removeEdges(const sofa::type::vector< EdgeID >& ed
     }
 
     // add the topological changes in the queue
-    sofa::helper::AdvancedTimer::stepBegin("removeEdgesWarning");
-    removeEdgesWarning(edgeIds_filtered);
+    {
+        SCOPED_TIMER("removeEdgesWarning");
+        removeEdgesWarning(edgeIds_filtered);
+    }
 
     // inform other objects that the edges are going to be removed
-    sofa::helper::AdvancedTimer::stepNext ("removeEdgesWarning", "propagateTopologicalChanges");
-
-    propagateTopologicalChanges();
+    {
+        SCOPED_TIMER("propagateTopologicalChanges");
+        propagateTopologicalChanges();
+    }
 
     // now destroy the old edges.
-    sofa::helper::AdvancedTimer::stepNext ("propagateTopologicalChanges", "removeEdgesProcess");
-    removeEdgesProcess( edgeIds_filtered, removeIsolatedPoints );
+    {
+        SCOPED_TIMER("removeEdgesProcess");
+        removeEdgesProcess( edgeIds_filtered, removeIsolatedPoints );
+    }
 
-    sofa::helper::AdvancedTimer::stepEnd("removeEdgesProcess");
     m_container->checkTopology();
-    sofa::helper::AdvancedTimer::stepEnd("removeEdges");
 }
 
 void EdgeSetTopologyModifier::removeItems(const sofa::type::vector< EdgeID >& items)
@@ -658,62 +664,68 @@ void EdgeSetTopologyModifier::removeItems(const sofa::type::vector< EdgeID >& it
 
 void EdgeSetTopologyModifier::addEdges(const sofa::type::vector< Edge >& edges)
 {
-    sofa::helper::AdvancedTimer::stepBegin("addEdges");
+    SCOPED_TIMER_VARNAME(addEdgesTimer, "addEdges");
     const sofa::Size nEdges = m_container->getNumberOfEdges();
 
-    // actually add edges in the topology container
-    sofa::helper::AdvancedTimer::stepBegin("addEdgesProcess");
-    addEdgesProcess(edges);
-
     sofa::type::vector<EdgeID> edgesIndex;
-    edgesIndex.reserve(edges.size());
 
-    for (sofa::Index i=0; i<edges.size(); ++i)
+    // actually add edges in the topology container
     {
-        edgesIndex.push_back((EdgeID)(nEdges+i));
+        SCOPED_TIMER_VARNAME(addEdgesProcessTimer, "addEdgesProcess");
+        addEdgesProcess(edges);
+
+        edgesIndex.reserve(edges.size());
+        for (sofa::Index i = 0; i < edges.size(); ++i)
+        {
+            edgesIndex.push_back((EdgeID)(nEdges + i));
+        }
     }
 
     // add topology event in the stack of topological events
-    sofa::helper::AdvancedTimer::stepNext ("addEdgesProcess", "addEdgesWarning");
-    addEdgesWarning(sofa::Size(edges.size()), edges, edgesIndex);
+    {
+        SCOPED_TIMER_VARNAME(addEdgesWarningTimer, "addEdgesWarning");
+        addEdgesWarning(sofa::Size(edges.size()), edges, edgesIndex);
+    }
 
     // inform other objects that the edges are already added
-    sofa::helper::AdvancedTimer::stepNext ("addEdgesWarning", "propagateTopologicalChanges");
-    propagateTopologicalChanges();
-    sofa::helper::AdvancedTimer::stepEnd("propagateTopologicalChanges");
-
-    sofa::helper::AdvancedTimer::stepEnd("addEdges");
+    {
+        SCOPED_TIMER("propagateTopologicalChanges");
+        propagateTopologicalChanges();
+    }
 }
 
 void EdgeSetTopologyModifier::addEdges(const sofa::type::vector< Edge >& edges,
         const sofa::type::vector< sofa::type::vector< EdgeID > > & ancestors,
         const sofa::type::vector< sofa::type::vector< SReal > >& baryCoefs)
 {
-    sofa::helper::AdvancedTimer::stepBegin("addEdges with ancestors");
+    SCOPED_TIMER_VARNAME(addEdgesTimer, "addEdges with ancestors");
     const sofa::Index nEdges = m_container->getNumberOfEdges();
 
-    /// actually add edges in the topology container
-    sofa::helper::AdvancedTimer::stepBegin("addEdgesProcess");
-    addEdgesProcess(edges);
-
     sofa::type::vector<EdgeID> edgesIndex;
-    edgesIndex.reserve(edges.size());
 
-    for (sofa::Index i=0; i<edges.size(); ++i)
+    /// actually add edges in the topology container
     {
-        edgesIndex.push_back((EdgeID)(nEdges+i));
+        SCOPED_TIMER("propagateTopologicalChanges");
+        addEdgesProcess(edges);
+
+        edgesIndex.reserve(edges.size());
+        for (sofa::Index i = 0; i < edges.size(); ++i)
+        {
+            edgesIndex.push_back((EdgeID)(nEdges + i));
+        }
     }
 
     // add topology event in the stack of topological events
-    sofa::helper::AdvancedTimer::stepNext ("addEdgesProcess", "addEdgesWarning");
-    addEdgesWarning(sofa::Size(edges.size()), edges, edgesIndex, ancestors, baryCoefs);
+    {
+        SCOPED_TIMER("addEdgesWarning");
+        addEdgesWarning(sofa::Size(edges.size()), edges, edgesIndex, ancestors, baryCoefs);
+    }
 
     // inform other objects that the edges are already added
-    sofa::helper::AdvancedTimer::stepNext ("addEdgesWarning", "propagateTopologicalChanges");
-    propagateTopologicalChanges();
-    sofa::helper::AdvancedTimer::stepEnd("propagateTopologicalChanges");
-
-    sofa::helper::AdvancedTimer::stepEnd("addEdges with ancestors");
+    {
+        SCOPED_TIMER("propagateTopologicalChanges");
+        propagateTopologicalChanges();
+    }
 }
 
 void EdgeSetTopologyModifier::addEdges(const sofa::type::vector< Edge >& edges,
@@ -767,7 +779,7 @@ void EdgeSetTopologyModifier::splitEdges( sofa::type::vector<EdgeID> &indices,
     m_container->checkTopology();
 }
 
-// Give the optimal vertex permutation according to the Reverse CuthillMckee algorithm (use BOOST GRAPH LIBRAIRY)
+// Give the optimal vertex permutation according to the Reverse CuthillMckee algorithm (use BOOST GRAPH LIBRARY)
 void EdgeSetTopologyModifier::resortCuthillMckee(sofa::type::vector<int>& inverse_permutation)
 {
     using namespace boost;
@@ -972,7 +984,7 @@ void EdgeSetTopologyModifier::propagateTopologicalEngineChanges()
     if (!m_container->isEdgeTopologyDirty()) // edge Data has not been touched
         return PointSetTopologyModifier::propagateTopologicalEngineChanges();
 
-    sofa::helper::AdvancedTimer::stepBegin("EdgeSetTopologyModifier::propagateTopologicalEngineChanges");
+    SCOPED_TIMER("EdgeSetTopologyModifier::propagateTopologicalEngineChanges");
 
     auto& edgeTopologyHandlerList = m_container->getTopologyHandlerList(sofa::geometry::ElementType::EDGE);
     for (const auto topoHandler : edgeTopologyHandlerList)
@@ -985,7 +997,6 @@ void EdgeSetTopologyModifier::propagateTopologicalEngineChanges()
 
     m_container->cleanEdgeTopologyFromDirty();
     PointSetTopologyModifier::propagateTopologicalEngineChanges();
-    sofa::helper::AdvancedTimer::stepEnd("EdgeSetTopologyModifier::propagateTopologicalEngineChanges");
 }
 
 

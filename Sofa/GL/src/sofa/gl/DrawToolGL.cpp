@@ -110,13 +110,24 @@ void DrawToolGL::drawLine(const Vec3 &p1, const Vec3 &p2, const type::RGBAColor&
     glEnd();
 }
 
-void DrawToolGL::drawInfiniteLine(const Vec3 &point, const Vec3 &direction, const type::RGBAColor& color)
+void DrawToolGL::drawInfiniteLine(const Vec3 &point, const Vec3 &direction, const type::RGBAColor& color, const bool& vanishing)
 {
     glBegin(GL_LINES);
-    glColor4f(color[0],color[1],color[2],color[3]);
+
+    glColor4f(color[0], color[1], color[2], color[3]);
     glVertex4d(point[0], point[1], point[2], 1.0);
+    if(vanishing)
+        glColor4f(color[0], color[1], color[2], 0.0f);
     glVertex4d(direction[0], direction[1], direction[2], 0.0);
+
     glEnd();
+}
+
+void DrawToolGL::drawInfiniteLine(const Vec3 &point, const Vec3 &direction, const float& size, const type::RGBAColor& color, const bool &vanishing)
+{
+    glLineWidth(size);
+    drawInfiniteLine(point, direction, color, vanishing);
+    glLineWidth(1);
 }
 
 void DrawToolGL::drawLines(const std::vector<Vec3> &points, float size, const type::RGBAColor& color)
@@ -437,7 +448,7 @@ void DrawToolGL::drawTriangleFan(const std::vector<Vec3> &points,
 void DrawToolGL::drawFrame(const Vec3& position, const Quaternion &orientation, const Vec<3,float> &size)
 {
     setPolygonMode(0,false);
-    gl::Axis::draw(position, orientation, size);
+    gl::Axis::draw(position, orientation, size, type::RGBAColor::red(), type::RGBAColor::green(), type::RGBAColor::blue());
 }
 void DrawToolGL::drawFrame(const Vec3& position, const Quaternion &orientation, const Vec<3,float> &size, const type::RGBAColor &color)
 {
@@ -518,7 +529,7 @@ void DrawToolGL::drawCapsule(const Vec3& p1, const Vec3 &p2, float radius,const 
         const float ct = cos(theta);
         /* construct normal */
         tmp = p*ct+q*st;
-        /* set the normal for the two subseqent points */
+        /* set the normal for the two subsequent points */
         normals.push_back(tmp);
 
         Vec3 w(p1);
@@ -593,7 +604,7 @@ void DrawToolGL::drawCone(const Vec3& p1, const Vec3 &p2, float radius1, float r
         const float ct = cos(theta);
         /* construct normal */
         tmp = p*ct+q*st;
-        /* set the normal for the two subseqent points */
+        /* set the normal for the two subsequent points */
         normals.push_back(tmp);
 
         /* point on disk 1 */
@@ -748,11 +759,11 @@ void DrawToolGL::internalDrawTriangle(const Vec3 &p1,const Vec3 &p2,const Vec3 &
         const type::RGBAColor &c1, const type::RGBAColor &c2, const type::RGBAColor &c3)
 {
     glNormalT(normal);
-    glColor4fv(c1.array());
+    glColor4fv(c1.data());
     glVertexNv<3>(p1.ptr());
-    glColor4fv(c2.array());
+    glColor4fv(c2.data());
     glVertexNv<3>(p2.ptr());
-    glColor4fv(c3.array());
+    glColor4fv(c3.data());
     glVertexNv<3>(p3.ptr());
 }
 
@@ -762,13 +773,13 @@ void DrawToolGL::internalDrawTriangle(const Vec3 &p1,const Vec3 &p2,const Vec3 &
         const type::RGBAColor &c1, const type::RGBAColor &c2, const type::RGBAColor &c3)
 {
     glNormalT(normal1);
-    glColor4fv(c1.array());
+    glColor4fv(c1.data());
     glVertexNv<3>(p1.ptr());
     glNormalT(normal2);
-    glColor4fv(c2.array());
+    glColor4fv(c2.data());
     glVertexNv<3>(p2.ptr());
     glNormalT(normal3);
-    glColor4fv(c3.array());
+    glColor4fv(c3.data());
     glVertexNv<3>(p3.ptr());
 }
 
@@ -777,7 +788,7 @@ void DrawToolGL::internalDrawTriangle( const Vec3 &p1, const Vec3 &p2, const Vec
         const Vec3 &normal, const  type::RGBAColor &c)
 {
     glNormalT(normal);
-    glColor4fv(c.array());
+    glColor4fv(c.data());
     glVertexNv<3>(p1.ptr());
     glVertexNv<3>(p2.ptr());
     glVertexNv<3>(p3.ptr());
@@ -845,7 +856,7 @@ void DrawToolGL::internalDrawQuad(const Vec3 &p1,const Vec3 &p2,const Vec3 &p3,c
         const Vec3 &normal, const type::RGBAColor &c)
 {
     glNormalT(normal);
-    glColor4fv(c.array());
+    glColor4fv(c.data());
     glVertexNv<3>(p1.ptr());
     glVertexNv<3>(p2.ptr());
     glVertexNv<3>(p3.ptr());
@@ -857,13 +868,13 @@ void DrawToolGL::internalDrawQuad(const Vec3 &p1,const Vec3 &p2,const Vec3 &p3,c
         const type::RGBAColor &c1, const type::RGBAColor &c2, const type::RGBAColor &c3, const type::RGBAColor &c4)
 {
     glNormalT(normal);
-    glColor4fv(c1.array());
+    glColor4fv(c1.data());
     glVertexNv<3>(p1.ptr());
-    glColor4fv(c2.array());
+    glColor4fv(c2.data());
     glVertexNv<3>(p2.ptr());
-    glColor4fv(c3.array());
+    glColor4fv(c3.data());
     glVertexNv<3>(p3.ptr());
-    glColor4fv(c4.array());
+    glColor4fv(c4.data());
     glVertexNv<3>(p4.ptr());
 }
 
@@ -872,16 +883,16 @@ void DrawToolGL::internalDrawQuad(const Vec3 &p1,const Vec3 &p2,const Vec3 &p3,c
         const type::RGBAColor &c1, const type::RGBAColor &c2, const type::RGBAColor &c3, const type::RGBAColor &c4)
 {
     glNormalT(normal1);
-    glColor4fv(c1.array());
+    glColor4fv(c1.data());
     glVertexNv<3>(p1.ptr());
     glNormalT(normal2);
-    glColor4fv(c2.array());
+    glColor4fv(c2.data());
     glVertexNv<3>(p2.ptr());
     glNormalT(normal3);
-    glColor4fv(c3.array());
+    glColor4fv(c3.data());
     glVertexNv<3>(p3.ptr());
     glNormalT(normal4);
-    glColor4fv(c4.array());
+    glColor4fv(c4.data());
     glVertexNv<3>(p4.ptr());
 }
 
@@ -1015,7 +1026,7 @@ void DrawToolGL::drawTetrahedra(const std::vector<Vec3> &points, const type::RGB
         const Vec3& p2 = *(it++);
         const Vec3& p3 = *(it++);
 
-        //this->drawTetrahedron(p0,p1,p2,p3,color); // not recommanded as it will call glBegin/glEnd <number of tetra> times
+        //this->drawTetrahedron(p0,p1,p2,p3,color); // not recommended as it will call glBegin/glEnd <number of tetra> times
         this->internalDrawTriangle(p0, p1, p2, cross((p1 - p0), (p2 - p0)), color);
         this->internalDrawTriangle(p0, p1, p3, cross((p1 - p0), (p3 - p0)), color);
         this->internalDrawTriangle(p0, p2, p3, cross((p2 - p0), (p3 - p0)), color);
@@ -1043,7 +1054,7 @@ void DrawToolGL::drawScaledTetrahedra(const std::vector<Vec3> &points, const typ
         Vec3 np2 = ((p2 - center)*scale) + center;
         Vec3 np3 = ((p3 - center)*scale) + center;
 
-        //this->drawTetrahedron(p0,p1,p2,p3,color); // not recommanded as it will call glBegin/glEnd <number of tetra> times
+        //this->drawTetrahedron(p0,p1,p2,p3,color); // not recommended as it will call glBegin/glEnd <number of tetra> times
         this->internalDrawTriangle(np0, np1, np2, cross((p1 - p0), (p2 - p0)), color);
         this->internalDrawTriangle(np0, np1, np3, cross((p1 - p0), (p3 - p0)), color);
         this->internalDrawTriangle(np0, np2, np3, cross((p2 - p0), (p3 - p0)), color);
@@ -1088,7 +1099,7 @@ void DrawToolGL::drawHexahedra(const std::vector<Vec3> &points, const type::RGBA
         const Vec3& p6 = *(it++);
         const Vec3& p7 = *(it++);
 
-        //this->drawHexahedron(p0,p1,p2,p3,p4,p5,p6,p7,color); // not recommanded as it will call glBegin/glEnd <number of hexa> times
+        //this->drawHexahedron(p0,p1,p2,p3,p4,p5,p6,p7,color); // not recommended as it will call glBegin/glEnd <number of hexa> times
         this->internalDrawQuad(p0, p1, p2, p3, cross((p1 - p0), (p2 - p0)), color);
         this->internalDrawQuad(p4, p7, p6, p5, cross((p7 - p5), (p6 - p5)), color);
         this->internalDrawQuad(p1, p0, p4, p5, cross((p0 - p1), (p4 - p1)), color);
@@ -1128,7 +1139,7 @@ void DrawToolGL::drawScaledHexahedra(const std::vector<Vec3> &points, const type
         Vec3 np6 = ((p6 - center)*scale) + center;
         Vec3 np7 = ((p7 - center)*scale) + center;
 
-        //this->drawHexahedron(p0,p1,p2,p3,p4,p5,p6,p7,color); // not recommanded as it will call glBegin/glEnd <number of hexa> times
+        //this->drawHexahedron(p0,p1,p2,p3,p4,p5,p6,p7,color); // not recommended as it will call glBegin/glEnd <number of hexa> times
         this->internalDrawQuad(np0, np1, np2, np3, cross((p1 - p0), (p2 - p0)), color);
         this->internalDrawQuad(np4, np7, np6, np5, cross((p7 - p5), (p6 - p5)), color);
         this->internalDrawQuad(np1, np0, np4, np5, cross((p0 - p1), (p4 - p1)), color);
@@ -1411,7 +1422,7 @@ void DrawToolGL::disableDepthTest()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void DrawToolGL::draw3DText(const Vec3 &p, float scale, const type::RGBAColor &color, const char* text)
 {
-    glColor4fv(color.array());
+    glColor4fv(color.data());
 
     sofa::gl::GlText::draw(text, p, (double)scale);
 }

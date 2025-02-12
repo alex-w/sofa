@@ -105,6 +105,9 @@ public:
     typedef typename traits::BlockTranspose BlockTranspose;
     typedef typename traits::Real Real;
 
+    template<class TBlock2>
+    using rebind_to = CompressedRowSparseMatrixGeneric< TBlock2, Policy >;
+
     typedef Matrix Expr;
     enum { category = MATRIX_SPARSE };
     enum { operand = 1 };
@@ -116,6 +119,7 @@ public:
     using VecIndex = typename CRSBlockTraits<Block>::VecIndex;
     using VecFlag  = typename CRSBlockTraits<Block>::VecFlag;
     using Index = typename VecIndex::value_type;
+    static constexpr Index s_invalidIndex = std::is_signed_v<Index> ? std::numeric_limits<Index>::lowest() : std::numeric_limits<Index>::max();
 
     typedef sofa::type::Vec<NC,Real> DBlock;
 
@@ -180,6 +184,10 @@ public:
         typename VecIndex::const_iterator end  (const VecIndex& b) const { return b.begin() + end  (); }
         void operator++() { ++this->first; }
         void operator++(int) { ++this->first; }
+        bool isInvalid() const
+        {
+            return this->first == s_invalidIndex || this->second == s_invalidIndex;
+        }
     };
 
     static bool sortedFind(const VecIndex& v, Range in, Index val, Index& result)
@@ -211,7 +219,7 @@ public :
     VecIndex rowIndex;    ///< indices of non-empty block rows
     VecIndex rowBegin;    ///< column indices of non-empty blocks in each row. The column indices of the non-empty block within the i-th non-empty row are all the colsIndex[j],  j  in [rowBegin[i],rowBegin[i+1])
     VecIndex colsIndex;   ///< column indices of all the non-empty blocks, sorted by increasing row index and column index
-    VecBlock  colsValue;   ///< values of the non-empty blocks, in the same order as in colsIndex
+    VecBlock colsValue;   ///< values of the non-empty blocks, in the same order as in colsIndex
     VecFlag  touchedBlock; ///< boolean vector, i-th value is true if block has been touched since last compression.
 
     /// Additional storage to make block insertion more efficient
@@ -254,7 +262,17 @@ public :
 
     const VecIndex& getRowIndex() const { return rowIndex; }
     const VecIndex& getRowBegin() const { return rowBegin; }
-    Range getRowRange(Index id) const { return Range(rowBegin[id], rowBegin[id+1]); }
+
+    /// Returns the range of indices from the column indices corresponding to the id-th row
+    Range getRowRange(Index id) const
+    {
+        if (id + 1 >= static_cast<Index>(rowBegin.size()))
+        {
+            return Range(s_invalidIndex, s_invalidIndex);
+        }
+        return Range(rowBegin[id], rowBegin[id+1]);
+    }
+
     const VecIndex& getColsIndex() const { return colsIndex; }
     const VecBlock& getColsValue() const { return colsValue; }
 
@@ -281,7 +299,7 @@ public :
         }
     }
 
-    SOFA_ATTRIBUTE_DEPRECATED__CRS_BLOCK_RENAMING()
+    SOFA_ATTRIBUTE_DISABLED__CRS_BLOCK_RENAMING()
     void resizeBloc(Index nbBRow, Index nbBCol)
     {
         resizeBlock(nbBRow, nbBCol);
@@ -763,7 +781,7 @@ public:
         return colsValue[colId];
     }
 
-    SOFA_ATTRIBUTE_DEPRECATED__CRS_BLOCK_RENAMING()
+    SOFA_ATTRIBUTE_DISABLED__CRS_BLOCK_RENAMING()
     const Block& bloc(Index i, Index j) const
     {
         return block(i, j);
@@ -872,7 +890,7 @@ public:
         }
     }
 
-    SOFA_ATTRIBUTE_DEPRECATED__CRS_BLOCK_RENAMING()
+    SOFA_ATTRIBUTE_DISABLED__CRS_BLOCK_RENAMING()
     Block* wbloc(Index i, Index j, bool create = false)
     {
         return wblock(i, j, create);
@@ -1433,7 +1451,7 @@ public:
 
         if( m.rowIndex.empty() ) return; // if m is null
 
-        for( Index xi = 0 ; xi < rowIndex.size() ; ++xi )  // for each non-null transpose block column
+        for( Size xi = 0 ; xi < rowIndex.size() ; ++xi )  // for each non-null transpose block column
         {
             unsigned mr = 0; // block row index in m
 

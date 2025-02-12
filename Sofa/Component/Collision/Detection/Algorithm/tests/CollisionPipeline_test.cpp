@@ -50,7 +50,7 @@ using sofa::helper::BackTrace;
 #include <sofa/testing/BaseSimulationTest.h>
 using sofa::testing::BaseSimulationTest;
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 
 namespace CollisionPipeline_test
 {
@@ -74,13 +74,13 @@ public:
     void checkCollisionPipelineWithMissingContactManager();
     int checkCollisionPipelineWithMonkeyValueForDepth(int value);
 
-    void SetUp() override
+    void doSetUp() override
     {
-        sofa::simpleapi::importPlugin("Sofa.Component.StateContainer"); 
-        sofa::simpleapi::importPlugin("Sofa.Component.Collision");
+        sofa::simpleapi::importPlugin(Sofa.Component.StateContainer);
+        sofa::simpleapi::importPlugin(Sofa.Component.Collision);
     }
 
-    void TearDown() override
+    void doTearDown() override
     {
         if (root)
             sofa::simulation::node::unload(root);
@@ -269,7 +269,7 @@ TEST_F(TestCollisionPipeline, checkCollisionPipelineWithMonkeyValueForDepth_Open
             // Check the returned value.
             if(this->checkCollisionPipelineWithMonkeyValueForDepth(depthValue) != depthValue)
             {
-                ADD_FAILURE() << "User provided depth parameter value '" << depthValue << "' has been un-expectedly overriden." ;
+                ADD_FAILURE() << "User provided depth parameter value '" << depthValue << "' has been un-expectedly overridden." ;
             }
         }
         else

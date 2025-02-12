@@ -27,8 +27,8 @@ using sofa::testing::BaseSimulationTest;
 #include <SceneChecking/SceneCheckerVisitor.h>
 using sofa::scenechecking::SceneCheckerVisitor;
 
-#include <SceneChecking/SceneCheck.h>
-using sofa::scenechecking::SceneCheck;
+#include <sofa/simulation/SceneCheck.h>
+using sofa::simulation::SceneCheck;
 
 #include <SceneChecking/SceneCheckAPIChange.h>
 using sofa::scenechecking::SceneCheckAPIChange;
@@ -58,7 +58,7 @@ using sofa::core::objectmodel::Base;
 using sofa::core::ObjectFactory;
 using sofa::core::ExecParams;
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 
 class ComponentDeprecated : public BaseObject
 {
@@ -76,13 +76,13 @@ int ComponentDeprecatedClassId = sofa::core::RegisterObject("")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 struct SceneChecker_test : public BaseSimulationTest
 {
-    void SetUp() override
+    void doSetUp() override
     {
     }
 
     void checkRequiredPlugin(bool missing)
     {
-        PluginManager::getInstance().loadPluginByName("Sofa.Component.ODESolver.Forward");
+        sofa::simpleapi::importPlugin(Sofa.Component.ODESolver.Forward);
 
         const std::string missStr = missing ? "" : "<RequiredPlugin name='Sofa.Component.ODESolver.Forward'/> \n";
         std::stringstream scene;
@@ -173,11 +173,12 @@ struct SceneChecker_test : public BaseSimulationTest
         EXPECT_MSG_NOEMIT(Warning);
 
         const std::string lvl = (shouldWarn)?"17.06":"17.12";
-
+        
+        sofa::simpleapi::importPlugin("Sofa.Component.SceneUtility");
+        
         std::stringstream scene;
         scene << "<?xml version='1.0'?>                                           \n"
               << "<Node name='Root' gravity='0 -9.81 0' time='0' animate='0' >    \n"
-              << "      <RequiredPlugin name='Sofa.Component.SceneUtility'/>      \n"
               << "      <APIVersion level='"<< lvl <<"'/>                         \n"
               << "      <ComponentDeprecated />                                   \n"
               << "</Node>                                                         \n";
@@ -209,15 +210,15 @@ struct SceneChecker_test : public BaseSimulationTest
 
     void checkUsingAlias(bool sceneWithAlias)
     {
-        const std::string withAlias = "Mesh";
-        const std::string withoutAlias = "MeshTopology";
+        const std::string withAlias = "VisualModel";
+        const std::string withoutAlias = "VisualModelImpl";
         const std::string componentName = sceneWithAlias ? withAlias : withoutAlias;
 
         std::stringstream scene;
         scene << "<?xml version='1.0'?>                                           \n"
               << "<Node name='Root' gravity='0 -9.81 0' time='0' animate='0' >    \n"
               << "    <RequiredPlugin name='Sofa.Component.StateContainer'/>      \n"
-              << "    <RequiredPlugin name='Sofa.Component.Topology.Container.Constant'/>      \n"
+              << "    <RequiredPlugin name='Sofa.Component.Visual'/>              \n"
               << "    <MechanicalObject template='Vec3d' />                       \n"
               << "    <" << componentName << "/>                                  \n"
               << "</Node>                                                         \n";

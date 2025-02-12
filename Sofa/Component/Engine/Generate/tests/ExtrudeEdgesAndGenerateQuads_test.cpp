@@ -55,7 +55,7 @@ struct ExtrudeEdgesAndGenerateQuads_test : public BaseSimulationTest,
     Node::SPtr m_node;
     typename ThisClass::SPtr m_thisObject;
 
-    void SetUp() override
+    void doSetUp() override
     {
         m_simu = sofa::simulation::getSimulation();
         ASSERT_NE(m_simu, nullptr);
@@ -83,7 +83,6 @@ struct ExtrudeEdgesAndGenerateQuads_test : public BaseSimulationTest,
         EXPECT_TRUE( m_thisObject->findData("extrudedQuads") != nullptr ) ;
 
         EXPECT_NO_THROW( m_thisObject->init() ) ;
-        EXPECT_NO_THROW( m_thisObject->bwdInit() ) ;
         EXPECT_NO_THROW( m_thisObject->reinit() ) ;
         EXPECT_NO_THROW( m_thisObject->reset() ) ;
         EXPECT_NO_THROW( m_thisObject->update() ) ;

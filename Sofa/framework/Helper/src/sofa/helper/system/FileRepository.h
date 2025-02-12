@@ -30,13 +30,8 @@
 #include <map>
 #include <list>
 
-namespace sofa
-{
 
-namespace helper
-{
-
-namespace system
+namespace sofa::helper::system
 {
 
 /// Helper class to find files in a list of directories.
@@ -83,14 +78,14 @@ public:
 
     /**
      * Initialize the set of paths using the environment variable specified by the parameter envVar, the relative path
-     * specified by the parameter relativePath and the ini files and respective keys specified by the paramter iniFilesAndKeys.
+     * specified by the parameter relativePath and the ini files and respective keys specified by the parameter iniFilesAndKeys.
      */
     FileRepository(const char* envVar, const char* relativePath, const fileKeysMap& iniFilesAndKeys)
     : FileRepository(envVar, {relativePath?std::string(relativePath):""}, iniFilesAndKeys) {}
 
     /**
      * Initialize the set of paths using the environment variable specified by the parameter envVar, the relative paths
-     * specified by the parameter paths and the ini files and respective keys specified by the paramter iniFilesAndKeys.
+     * specified by the parameter paths and the ini files and respective keys specified by the parameter iniFilesAndKeys.
      */
     FileRepository(const char* envVar, const std::vector<std::string> & paths, const fileKeysMap& iniFilesAndKeys);
 
@@ -150,7 +145,7 @@ public:
     void print();
 
 
-    /// OS-dependant character separing entries in list of paths.
+    /// OS-dependant character separating entries in list of paths.
     static char entrySeparator()
     {
 #ifdef WIN32
@@ -191,10 +186,7 @@ protected:
 extern SOFA_HELPER_API FileRepository DataRepository; ///< Default repository
 extern SOFA_HELPER_API FileRepository PluginRepository; ///< Default repository
 
-} // namespace system
+} // namespace sofa::helper::system
 
-} // namespace helper
-
-} // namespace sofa
 
 #endif

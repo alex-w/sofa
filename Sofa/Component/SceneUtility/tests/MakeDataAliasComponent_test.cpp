@@ -56,7 +56,7 @@ using sofa::helper::logging::RichConsoleStyleMessageFormatter ;
 
 using sofa::core::objectmodel::ComponentState ;
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 
 namespace makedataaliascomponent_test
 {
@@ -72,8 +72,8 @@ bool inited = doInit();
 
 void perTestInit()
 {
-    sofa::simpleapi::importPlugin("Sofa.Component.SceneUtility");
-    sofa::simpleapi::importPlugin("Sofa.Component.StateContainer");
+    sofa::simpleapi::importPlugin(Sofa.Component.SceneUtility);
+    sofa::simpleapi::importPlugin(Sofa.Component.StateContainer);
 
     if(defaultHandler==nullptr)
         defaultHandler=new ConsoleMessageHandler(&RichConsoleStyleMessageFormatter::getInstance()) ;

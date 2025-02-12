@@ -28,7 +28,6 @@
 
 #include <sofa/type/vector.h>
 #include <sofa/helper/config.h>
-#include <sofa/type/trait/is_container.h>
 
 namespace sofa::helper
 {
@@ -37,11 +36,10 @@ namespace sofa::helper
 ///////////////////////////////////////////////////////////////////////////////////
 /**
  * \brief OptionsGroup is a kind of data for a radio button. It has a list of text
- * representing a list of choices, and a interger number indicating the choice
+ * representing a list of choices, and a integer number indicating the choice
  * selected.
  *
  */
-
 class SOFA_HELPER_API OptionsGroup
 {
 public :
@@ -55,11 +53,11 @@ public :
 
     ///Constructor by given the number of argument following by the variable arguments
     ///Example OptionsGroup m_options(4,"button0","button1","button2","button3");
-    SOFA_ATTRIBUTE_DEPRECATED("v23.06", "v23.12", "This constructor is error-prone. Use another constructor.")
+    SOFA_ATTRIBUTE_DISABLED("v23.06", "v23.12", "This constructor is error-prone. Use another constructor.")
     explicit OptionsGroup(int nbofRadioButton,...);
 
     ///generic constructor taking other string container like list<string>, set<string>, vector<string>
-    template <class T, typename = std::enable_if_t<type::trait::is_container<T>::value> >
+    template <std::ranges::range T>
     explicit OptionsGroup(const T& list);
 
     template <class T> OptionsGroup(const std::initializer_list<T>& list);
@@ -80,7 +78,7 @@ public :
 
     ///Reinitializing options by a pre-constructed optionsgroup objected
     ///Example m_options.setNames(4,"button0","button1","button2","button3");
-    SOFA_ATTRIBUTE_DEPRECATED("v23.06", "v23.12", "This method is error-prone. Use another setNames method.")
+    SOFA_ATTRIBUTE_DISABLED("v23.06", "v23.12", "This method is error-prone. Use another setNames method.")
     void setNames(int nbofRadioButton,...);
 
     template <class T>
@@ -94,13 +92,13 @@ public :
 
     ///Setting the activated item by a input-stream.
     ///the istream is converted to string.
-    ///If the reading string is in options list, its value is setted activated,
+    ///If the reading string is in options list, its value is set activated,
     ///else push a warning.
     void readFromStream(std::istream& stream);
 
     /// @}
 
-    /// @name getting informations operators
+    /// @name getting information operators
     /// @{
     [[nodiscard]] unsigned int       getSelectedId()                      const;
     [[nodiscard]] const std::string& getSelectedItem()                    const;
@@ -115,7 +113,7 @@ protected:
     type::vector<std::string> textItems    ;
     unsigned int                selectedItem ;
 
-    template <class T> void buildFromContainer(const T& list);
+    template <std::ranges::range T> void buildFromContainer(const T& list);
 
 public:
 
@@ -138,7 +136,7 @@ inline std::istream & operator >>(std::istream& in, OptionsGroup& m_trick)
     return in;
 }
 
-template <class T, typename>
+template <std::ranges::range T>
 OptionsGroup::OptionsGroup(const T& list)
 {
     buildFromContainer(list);
@@ -160,7 +158,7 @@ void OptionsGroup::setNames(const std::initializer_list<T>& list)
     selectedItem=0;
 }
 
-template <class T>
+template <std::ranges::range T>
 void OptionsGroup::buildFromContainer(const T& list)
 {
     textItems.reserve(list.size());

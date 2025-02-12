@@ -25,7 +25,7 @@ using sofa::testing::BaseSimulationTest;
 #include <sofa/testing/NumericTest.h>
 using sofa::testing::NumericTest;
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 
 #include <sofa/simulation/Simulation.h>
 #include <sofa/component/odesolver/testing/EigenTestUtilities.h>
@@ -81,7 +81,7 @@ Node::SPtr massSpringString(Node::SPtr parent,
                                 {"name",oss.str() + "_mass"},
                                 {"vertexMass", simpleapi::str(totalMass / numParticles)} });
 
-    simpleapi::createObject(node, "StiffSpringForceField", {
+    simpleapi::createObject(node, "SpringForceField", {
                                 {"name", oss.str() + "_spring"},
                                 {"spring", springs.str()}
         });
@@ -103,12 +103,12 @@ struct EulerImplicit_test_2_particles_to_equilibrium : public BaseSimulationTest
         const simulation::Node::SPtr root = simpleapi::createRootNode(simu, "root");
         //*******
         // begin create scene under the root node
-        sofa::simpleapi::importPlugin("Sofa.Component.ODESolver");
-        sofa::simpleapi::importPlugin("Sofa.Component.LinearSolver.Iterative");
-        sofa::simpleapi::importPlugin("Sofa.Component.StateContainer");
-        sofa::simpleapi::importPlugin("Sofa.Component.Mass");
-        sofa::simpleapi::importPlugin("Sofa.Component.Constraint.Projective");
-        sofa::simpleapi::importPlugin("Sofa.Component.SolidMechanics.Spring");
+        sofa::simpleapi::importPlugin(Sofa.Component.ODESolver);
+        sofa::simpleapi::importPlugin(Sofa.Component.LinearSolver.Iterative);
+        sofa::simpleapi::importPlugin(Sofa.Component.StateContainer);
+        sofa::simpleapi::importPlugin(Sofa.Component.Mass);
+        sofa::simpleapi::importPlugin(Sofa.Component.Constraint.Projective);
+        sofa::simpleapi::importPlugin(Sofa.Component.SolidMechanics.Spring);
 
         // remove warnings
         simpleapi::createObject(root, "DefaultAnimationLoop", {});
@@ -131,7 +131,7 @@ struct EulerImplicit_test_2_particles_to_equilibrium : public BaseSimulationTest
                     0.1     // damping ratio
                     );
 
-        simpleapi::createObject(string, "FixedConstraint", {
+        simpleapi::createObject(string, "FixedProjectiveConstraint", {
             { "indices", "0"}
         });
 
@@ -201,12 +201,12 @@ struct EulerImplicit_test_2_particles_in_different_nodes_to_equilibrium  : publi
         // create scene
         root->setGravity(Vec3(0,0,0));
 
-        sofa::simpleapi::importPlugin("Sofa.Component.ODESolver");
-        sofa::simpleapi::importPlugin("Sofa.Component.LinearSolver.Iterative");
-        sofa::simpleapi::importPlugin("Sofa.Component.StateContainer");
-        sofa::simpleapi::importPlugin("Sofa.Component.Mass");
-        sofa::simpleapi::importPlugin("Sofa.Component.Constraint.Projective");
-        sofa::simpleapi::importPlugin("Sofa.Component.SolidMechanics.Spring");
+        sofa::simpleapi::importPlugin(Sofa.Component.ODESolver);
+        sofa::simpleapi::importPlugin(Sofa.Component.LinearSolver.Iterative);
+        sofa::simpleapi::importPlugin(Sofa.Component.StateContainer);
+        sofa::simpleapi::importPlugin(Sofa.Component.Mass);
+        sofa::simpleapi::importPlugin(Sofa.Component.Constraint.Projective);
+        sofa::simpleapi::importPlugin(Sofa.Component.SolidMechanics.Spring);
         // remove warnings
         simpleapi::createObject(root, "DefaultAnimationLoop", {});
         simpleapi::createObject(root, "DefaultVisualManagerLoop", {});
@@ -245,7 +245,7 @@ struct EulerImplicit_test_2_particles_in_different_nodes_to_equilibrium  : publi
         // attach a spring
         std::ostringstream oss;
         oss << 0 << " " << 0 << " " << 1000.0 << " " << 0.1 << " " << 1.0f;
-        simpleapi::createObject(root, "StiffSpringForceField", {
+        simpleapi::createObject(root, "SpringForceField", {
             {"spring", oss.str()},
             { "object1", "@/DOF"},
             { "object2", "@childNode/childDof"},

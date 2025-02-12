@@ -56,7 +56,7 @@ protected:
 
     ~PairInteractionProjectiveConstraintSet() override;
 public:
-    Data<SReal> endTime;  ///< Time when the constraint becomes inactive (-1 for infinitely active)
+    Data<SReal> endTime; ///< The constraint stops acting after the given value. Use a negative value for infinite constraints
     virtual bool isActive() const; ///< if false, the constraint does nothing
 
     // to get rid of warnings
@@ -173,7 +173,7 @@ public:
     using Inherit2::getMechModel2;
 };
 
-#if  !defined(SOFA_CORE_BEHAVIOR_PAIRINTERACTIONPROJECTIVECONSTRAINTSET_CPP)
+#if !defined(SOFA_CORE_BEHAVIOR_PAIRINTERACTIONPROJECTIVECONSTRAINTSET_CPP)
 extern template class SOFA_CORE_API PairInteractionProjectiveConstraintSet<defaulttype::Vec3Types>;
 extern template class SOFA_CORE_API PairInteractionProjectiveConstraintSet<defaulttype::Vec2Types>;
 extern template class SOFA_CORE_API PairInteractionProjectiveConstraintSet<defaulttype::Vec1Types>;

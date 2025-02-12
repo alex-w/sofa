@@ -33,13 +33,13 @@
 namespace sofa::component::topology::utility
 {
 
-using namespace defaulttype;
 using namespace sofa::core::topology;
 
-
-int TopologyCheckerClass = core::RegisterObject("Read topological Changes and process them.")
-        .add< TopologyChecker >();
-
+void registerTopologyChecker(sofa::core::ObjectFactory* factory)
+{
+    factory->registerObjects(core::ObjectRegistrationData("Read topological Changes and process them.")
+        .add< TopologyChecker >());
+}
 
 TopologyChecker::TopologyChecker()
     : d_eachStep(initData(&d_eachStep, false, "eachStep", "Check topology at each step"))
@@ -84,15 +84,15 @@ void TopologyChecker::reinit()
 bool TopologyChecker::checkTopology()
 {
     bool result = false;
-    if (m_topology->getTopologyType() == TopologyElementType::HEXAHEDRON)
+    if (m_topology->getTopologyType() == geometry::ElementType::HEXAHEDRON)
         result = checkHexahedronTopology();
-    if (m_topology->getTopologyType() == TopologyElementType::TETRAHEDRON)
+    if (m_topology->getTopologyType() == geometry::ElementType::TETRAHEDRON)
         result = checkTetrahedronTopology();
-    else if (m_topology->getTopologyType() == TopologyElementType::QUAD)
+    else if (m_topology->getTopologyType() == geometry::ElementType::QUAD)
         result = checkQuadTopology();
-    else if (m_topology->getTopologyType() == TopologyElementType::TRIANGLE)
+    else if (m_topology->getTopologyType() == geometry::ElementType::TRIANGLE)
         result = checkTriangleTopology();
-    else if (m_topology->getTopologyType() == TopologyElementType::EDGE)
+    else if (m_topology->getTopologyType() == geometry::ElementType::EDGE)
         result = checkEdgeTopology();
 
     return result;

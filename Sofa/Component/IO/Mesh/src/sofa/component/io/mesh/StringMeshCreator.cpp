@@ -31,16 +31,16 @@ using namespace sofa::defaulttype;
 using namespace sofa::core::loader;
 using type::vector;
 
-int StringMeshCreatorClass = core::RegisterObject("Procedural creation of a one-dimensional mesh.")
-        .add< StringMeshCreator >()
-        ;
-
-
+void registerStringMeshCreator(sofa::core::ObjectFactory* factory)
+{
+    factory->registerObjects(core::ObjectRegistrationData("Procedural creation of a one-dimensional mesh.")
+        .add< StringMeshCreator >());
+}
 
 StringMeshCreator::StringMeshCreator(): MeshLoader()
-  , resolution( initData(&resolution,(unsigned)2,"resolution","Number of vertices"))
+  , d_resolution(initData(&d_resolution, (unsigned)2, "resolution", "Number of vertices"))
 {
-    addUpdateCallback("updateResolution", {&resolution}, [this](const core::DataTracker& )
+    addUpdateCallback("updateResolution", {&d_resolution}, [this](const core::DataTracker& )
     {
         if(load())
         {
@@ -50,6 +50,8 @@ StringMeshCreator::StringMeshCreator(): MeshLoader()
         return sofa::core::objectmodel::ComponentState::Invalid;
 
     }, {&d_positions, &d_edges});
+
+    resolution.setOriginalData(&d_resolution);
 }
 
 void StringMeshCreator::doClearBuffers()
@@ -64,7 +66,7 @@ bool StringMeshCreator::doLoad()
     auto my_positions = sofa::helper::getWriteOnlyAccessor(d_positions);
     auto my_edges = sofa::helper::getWriteOnlyAccessor(d_edges);
 
-    const unsigned numX = resolution.getValue();
+    const unsigned numX = d_resolution.getValue();
 
     // Warning: Vertex creation order must be consistent with method vert.
     for(unsigned x=0; x<numX; x++)

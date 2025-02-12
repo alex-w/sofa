@@ -25,6 +25,8 @@
 #include <sofa/linearalgebra/CompressedRowSparseMatrixGeneric.h>
 
 #include <numeric>
+#include <sofa/helper/StringUtils.h>
+
 
 namespace sofa::linearalgebra
 {
@@ -74,6 +76,7 @@ public:
     using VecIndex = typename linearalgebra::CRSBlockTraits<Block>::VecIndex;
     using VecFlag  = typename linearalgebra::CRSBlockTraits<Block>::VecFlag;
     using Index    = typename VecIndex::value_type;
+    static constexpr Index s_invalidIndex = std::is_signed_v<Index> ? std::numeric_limits<Index>::lowest() : std::numeric_limits<Index>::max();
 
     typedef typename CRSMatrix::Block Data;
     typedef typename CRSMatrix::Range Range;
@@ -81,6 +84,12 @@ public:
     typedef typename CRSMatrix::Real Real;
     typedef typename CRSMatrix::Index KeyType;
     typedef typename CRSMatrix::IndexedBlock IndexedBlock;
+
+    static constexpr sofa::Index NL = CRSMatrix::NL;  ///< Number of rows of a block
+    static constexpr sofa::Index NC = CRSMatrix::NC;  ///< Number of columns of a block
+
+    template<class TBlock2>
+    using rebind_to = CompressedRowSparseMatrixConstraint< TBlock2, Policy >;
 
 public:
     CompressedRowSparseMatrixConstraint()
@@ -161,54 +170,77 @@ public:
             return m_internal;
         }
 
-        void operator++() // prefix
+        bool isInvalid() const
         {
-            m_internal++;
+            return m_internal == CompressedRowSparseMatrixConstraint::s_invalidIndex;
         }
 
-        void operator++(int) // postfix
+        ColConstIterator& operator++() // prefix
         {
-            m_internal++;
+            ++m_internal;
+            return *this;
         }
 
-        void operator--() // prefix
+        ColConstIterator operator++(difference_type) // postfix
         {
-            m_internal--;
+            ColConstIterator tmp = *this;
+            ++(*this);
+            return tmp;
         }
 
-        void operator--(int) // postfix
+        ColConstIterator& operator--() // prefix
         {
-            m_internal--;
+            --m_internal;
+            return *this;
         }
 
-        void operator+=(int i)
+        ColConstIterator operator--(difference_type) // postfix
+        {
+            ColConstIterator tmp = *this;
+            --(*this);
+            return tmp;
+        }
+
+        ColConstIterator& operator+=(difference_type i)
         {
             m_internal += i;
+            return *this;
         }
 
-        void operator-=(int i)
+        ColConstIterator& operator-=(difference_type i)
         {
             m_internal -= i;
+            return *this;
         }
 
-        bool operator==(const ColConstIterator& it2) const
+        bool operator==(const ColConstIterator& other) const
         {
-            return (m_internal == it2.m_internal);
+            return (m_internal == other.m_internal);
         }
 
-        bool operator!=(const ColConstIterator& it2) const
+        bool operator!=(const ColConstIterator& other) const
         {
-            return (m_internal != it2.m_internal);
+            return m_internal != other.m_internal;
         }
 
-        bool operator<(const ColConstIterator& it2) const
+        bool operator<(const ColConstIterator& other) const
         {
-            return m_internal < it2.m_internal;
+            return m_internal < other.m_internal;
         }
 
-        bool operator>(const ColConstIterator& it2) const
+        bool operator>(const ColConstIterator& other) const
         {
-            return m_internal > it2.m_internal;
+            return other < *this;
+        }
+
+        bool operator<=(const ColConstIterator& other) const
+        {
+            return !(other < *this);
+        }
+
+        bool operator>=(const ColConstIterator& other) const
+        {
+            return !(*this < other);
         }
 
     private :
@@ -243,10 +275,9 @@ public:
             , m_matrix(it2.m_matrix)
         {}
 
-        RowConstIterator()
-        {}
+        RowConstIterator() = default;
 
-        RowConstIterator&  operator=(const RowConstIterator& other)
+        RowConstIterator& operator=(const RowConstIterator& other)
         {
             if (this != &other)
             {
@@ -256,69 +287,90 @@ public:
             return *this;
         }
 
-        Index index() const
+        [[nodiscard]] Index index() const
         {
             return m_matrix->rowIndex[m_internal];
         }
 
-        Index getInternal() const
+        [[nodiscard]] Index getInternal() const
         {
             return m_internal;
         }
 
-        ColConstIterator begin() const
+        [[nodiscard]] bool isInvalid() const
         {
-            Range r = m_matrix->getRowRange(m_internal);
+            return m_internal == CompressedRowSparseMatrixConstraint::s_invalidIndex;
+        }
+
+        [[nodiscard]] ColConstIterator begin() const
+        {
+            if (isInvalid())
+            {
+                return ColConstIterator(m_internal, s_invalidIndex, m_matrix);
+            }
+            const Range r = m_matrix->getRowRange(m_internal);
             return ColConstIterator(m_internal, r.begin(), m_matrix);
         }
 
         ColConstIterator end() const
         {
-            Range r = m_matrix->getRowRange(m_internal);
+            if (isInvalid())
+            {
+                return ColConstIterator(m_internal, s_invalidIndex, m_matrix);
+            }
+            const Range r = m_matrix->getRowRange(m_internal);
             return ColConstIterator(m_internal, r.end(), m_matrix);
         }
 
-        RowType row() const
+        [[nodiscard]] RowType row() const
         {
-            Range r = m_matrix->getRowRange(m_internal);
+            const Range r = m_matrix->getRowRange(m_internal);
             return RowType(ColConstIterator(m_internal, r.begin(), m_matrix),
                            ColConstIterator(m_internal, r.end(), m_matrix));
         }
 
-        bool empty() const
+        [[nodiscard]] bool empty() const
         {
-            Range r = m_matrix->getRowRange(m_internal);
+            const Range r = m_matrix->getRowRange(m_internal);
             return r.empty();
         }
 
-        void operator++() // prefix
+        RowConstIterator& operator++() // prefix
         {
-            m_internal++;
+            ++m_internal;
+            return *this;
         }
 
-        void operator++(int) // postfix
+        RowConstIterator operator++(difference_type) // postfix
         {
-            m_internal++;
+            RowConstIterator tmp = *this;
+            ++(*this);
+            return tmp;
         }
 
-        void operator--() // prefix
+        RowConstIterator& operator--() // prefix
         {
-            m_internal--;
+            --m_internal;
+            return *this;
         }
 
-        void operator--(int) // postfix
+        RowConstIterator operator--(difference_type) // postfix
         {
-            m_internal--;
+            RowConstIterator tmp = *this;
+            --(*this);
+            return tmp;
         }
 
-        void operator+=(int i)
+        RowConstIterator& operator+=(difference_type i)
         {
             m_internal += i;
+            return *this;
         }
 
-        void operator-=(int i)
+        RowConstIterator& operator-=(difference_type i)
         {
             m_internal -= i;
+            return *this;
         }
 
         int operator-(const RowConstIterator& it2) const
@@ -326,38 +378,48 @@ public:
             return m_internal - it2.m_internal;
         }
 
-        RowConstIterator operator+(int i) const
+        RowConstIterator operator+(difference_type i) const
         {
             RowConstIterator res = *this;
             res += i;
             return res;
         }
 
-        RowConstIterator operator-(int i) const
+        RowConstIterator operator-(difference_type i) const
         {
             RowConstIterator res = *this;
             res -= i;
             return res;
         }
 
-        bool operator==(const RowConstIterator& it2) const
+        bool operator==(const RowConstIterator& other) const
         {
-            return m_internal == it2.m_internal;
+            return m_internal == other.m_internal;
         }
 
-        bool operator!=(const RowConstIterator& it2) const
+        bool operator!=(const RowConstIterator& other) const
         {
-            return !(m_internal == it2.m_internal);
+            return !(m_internal == other.m_internal);
         }
 
-        bool operator<(const RowConstIterator& it2) const
+        bool operator<(const RowConstIterator& other) const
         {
-            return m_internal < it2.m_internal;
+            return m_internal < other.m_internal;
         }
 
-        bool operator>(const RowConstIterator& it2) const
+        bool operator>(const RowConstIterator& other) const
         {
-            return m_internal > it2.m_internal;
+            return other < *this;
+        }
+
+        bool operator<=(const RowConstIterator& other) const
+        {
+            return !(other < *this);
+        }
+
+        bool operator>=(const RowConstIterator& other) const
+        {
+            return !(*this < other);
         }
 
         template <class VecDeriv, typename Real>
@@ -376,14 +438,16 @@ public:
     RowConstIterator begin() const
     {
         if constexpr (Policy::AutoCompress) const_cast<Matrix*>(this)->compress();  /// \warning this violates the const-ness of the method !
-        return RowConstIterator(this, 0);
+        return RowConstIterator(this,
+            this->rowIndex.empty() ? s_invalidIndex : 0);
     }
 
     /// Get the iterator corresponding to the end of the rows of blocks
     RowConstIterator end() const
     {
         if constexpr (Policy::AutoCompress) const_cast<Matrix*>(this)->compress();  /// \warning this violates the const-ness of the method !
-        return RowConstIterator(this, Index(this->rowIndex.size()));
+        return RowConstIterator(this,
+            this->rowIndex.empty() ? s_invalidIndex : Index(this->rowIndex.size()));
     }
 
     /// Get the iterator corresponding to the beginning of the rows of blocks
@@ -490,7 +554,7 @@ public:
         }
         else
         {
-            return RowConstIterator(this, this->rowIndex.size());
+            return this->end();
         }
     }
 
@@ -556,16 +620,24 @@ public:
     /// write to an output stream
     inline friend std::ostream& operator << ( std::ostream& out, const CompressedRowSparseMatrixConstraint<TBlock, Policy>& sc)
     {
-        for (RowConstIterator rowIt = sc.begin(); rowIt !=  sc.end(); ++rowIt)
+        std::ostringstream ossrow;
+        std::size_t nbLines = 0;
+        for (RowConstIterator rowIt = sc.begin(); rowIt != sc.end(); ++rowIt)
         {
-            out << "Constraint ID : ";
-            out << rowIt.index();
-            for (ColConstIterator colIt = rowIt.begin(); colIt !=  rowIt.end(); ++colIt)
+            ossrow << rowIt.index() << " ";
+
+            std::ostringstream ossline;
+            std::size_t n = 0;
+            for (ColConstIterator colIt = rowIt.begin(); colIt != rowIt.end(); ++colIt)
             {
-                out << "  dof ID : " << colIt.index() << "  value : " << colIt.val() << "  ";
+                ossline << colIt.index() << " " << colIt.val() << " ";
+                n++;
             }
-            out << "\n";
+            ossrow << n << " " << ossline.str();
+            nbLines++ ;
         }
+
+        out << nbLines << " " << ossrow.str();
 
         return out;
     }
@@ -575,16 +647,25 @@ public:
     {
         sc.clear();
 
+        unsigned int nbLines;
         unsigned int c_id;
         unsigned int c_number;
         unsigned int c_dofIndex;
         TBlock c_value;
 
-        while (!(in.rdstate() & std::istream::eofbit))
+        if (in.rdstate() & std::istream::eofbit)
+        {
+            return in;
+        }
+
+        in >> nbLines;
+
+        unsigned int currentNbLines = 0;
+        while (currentNbLines < nbLines && !(in.rdstate() & std::istream::eofbit))
         {
             in >> c_id;
             in >> c_number;
-
+         
             auto c_it = sc.writeLine(c_id);
 
             for (unsigned int i = 0; i < c_number; i++)
@@ -593,10 +674,43 @@ public:
                 in >> c_value;
                 c_it.addCol(c_dofIndex, c_value);
             }
+            currentNbLines++;
         }
 
+        assert(nbLines == currentNbLines);
+
         sc.compress();
+
         return in;
+    }
+    
+    /// write into output stream (default is standard output)
+    void prettyPrint(std::ostream& out = std::cout) const
+    {
+        for (RowConstIterator rowIt = this->begin(); rowIt !=  this->end(); ++rowIt)
+        {
+            out << "Constraint ID : ";
+            out << rowIt.index();
+            const auto colToString = [](const ColConstIterator& colIt)
+            {
+                std::stringstream ss;
+                ss << "dof ID : " << colIt.index() << "  value : " << colIt.val();
+                return ss.str();
+            };
+
+            ColConstIterator colIt = rowIt.begin();
+            const ColConstIterator colItEnd = rowIt.end();
+            if (colIt != colItEnd)
+            {
+                out << "  " << colToString(colIt++);
+                while(colIt != colItEnd)
+                {
+                    out << "  " << colToString(colIt++);
+                }
+            }
+
+            out << "\n";
+        }
     }
 
     static const char* Name()

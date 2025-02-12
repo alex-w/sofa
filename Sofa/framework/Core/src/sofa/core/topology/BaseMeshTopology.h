@@ -34,9 +34,6 @@ public:
     SOFA_ABSTRACT_CLASS(BaseMeshTopology, core::topology::Topology);
     SOFA_BASE_CAST_IMPLEMENTATION(BaseMeshTopology)
 
-    SOFA_ATTRIBUTE_DISABLED("v20.12 (PR#1515)", "v21.06", "Use sofa::Index instead of sofa::core::topology::BaseMeshTopology::index_type")
-    typedef DeprecatedAndRemoved index_type;
-
     typedef sofa::type::vector<Edge> 		        SeqEdges;
     typedef sofa::type::vector<Triangle>		    SeqTriangles;
     typedef sofa::type::vector<Quad>		        SeqQuads;
@@ -88,6 +85,9 @@ protected:
 public:
     void init() override;
 
+    /// Method to be overriden by child class to create all the topology buffers
+    virtual void computeCrossElementBuffers() {}
+
     /// Load the topology from a file.
     ///
     /// The default implementation supports the following formats: obj, gmsh, mesh (custom simple text file), xs3 (deprecated description of mass-springs networks).
@@ -121,8 +121,8 @@ public:
     virtual const Tetra getTetrahedron(TetraID i)    { return getTetrahedra()[i]; }
     virtual const Hexa getHexahedron(HexaID i)       { return getHexahedra()[i]; }   
 	   
-    /// Type of higher topology element contains in this container @see TopologyElementType
-    virtual sofa::core::topology::TopologyElementType getTopologyType() const = 0;
+    /// Type of higher topology element contains in this container @see ElementType
+    virtual sofa::geometry::ElementType getTopologyType() const = 0;
     /// @}
 
     /// Bridge from old functions (using Tetra/Tetras and Hexa/Hexas) to new ones

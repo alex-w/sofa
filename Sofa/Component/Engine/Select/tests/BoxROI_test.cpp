@@ -34,7 +34,7 @@ using ::testing::Types;
 #include <sofa/core/objectmodel/ComponentState.h>
 using sofa::core::objectmodel::ComponentState;
 
-#include <sofa/component/engine/select/BoxROI.h>
+#include <sofa/component/engine/select/BoxROI.inl>
 using sofa::component::engine::select::BoxROI;
 
 #include <sofa/simulation/graph/DAGSimulation.h>
@@ -59,7 +59,7 @@ using sofa::helper::logging::MessageDispatcher;
 #include <sofa/testing/TestMessageHandler.h>
 #include <sofa/testing/BaseTest.h>
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 
 template <typename TDataType>
 struct BoxROITest :  public sofa::testing::BaseTest
@@ -70,11 +70,12 @@ struct BoxROITest :  public sofa::testing::BaseTest
     Node::SPtr m_node;
     typename TheBoxROI::SPtr m_boxroi;
 
-    void SetUp() override
+    void doSetUp() override
     {
-        sofa::simpleapi::importPlugin("Sofa.Component.StateContainer");
-        sofa::simpleapi::importPlugin("Sofa.Component.Topology.Container.Dynamic");
-        sofa::simpleapi::importPlugin("Sofa.Component.Engine.Select");
+        this->loadPlugins({
+            Sofa.Component.StateContainer,
+            Sofa.Component.Topology.Container.Dynamic,
+            Sofa.Component.Engine.Select});
 
         m_simu = sofa::simulation::getSimulation();
         ASSERT_NE(m_simu, nullptr);
@@ -86,7 +87,7 @@ struct BoxROITest :  public sofa::testing::BaseTest
         m_node->addObject(m_boxroi);
     }
 
-    void TearDown() override
+    void doTearDown() override
     {
         if (m_root != nullptr){
             sofa::simulation::node::unload(m_root);
@@ -140,7 +141,7 @@ struct BoxROITest :  public sofa::testing::BaseTest
 
         boxroi->reinit();
 
-        EXPECT_EQ(boxroi->getComponentState(), ComponentState::Invalid ) << "Reinit shouln't crash or change the state because there is still no MechanicalObject. ";
+        EXPECT_EQ(boxroi->getComponentState(), ComponentState::Invalid ) << "Reinit shouldn't crash or change the state because there is still no MechanicalObject. ";
 
     }
 

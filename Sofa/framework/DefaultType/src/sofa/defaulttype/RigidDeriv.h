@@ -606,7 +606,22 @@ namespace sofa::linearalgebra
 
         static void transpose(BlockTranspose& res, const Block& b) { res = b; }
 
-        static sofa::linearalgebra::BaseMatrix::ElementType getElementType() { return matrix_bloc_traits<Real,IndexType>::getElementType(); }
-        static const char* Name() { return defaulttype::DataTypeName<defaulttype::RigidDeriv<N, T>>::name(); }
+        template<class TSubBlock, std::enable_if_t<std::is_scalar_v<TSubBlock>, bool> = true>
+        static void subBlock(const Block& b, IndexType row, IndexType col, TSubBlock& subBlock)
+        {
+            SOFA_UNUSED(row);
+            subBlock = b[col];
+        }
+
+        static sofa::linearalgebra::BaseMatrix::ElementType getElementType()
+        {
+            return matrix_bloc_traits<Real, IndexType>::getElementType();
+        }
+
+        static const char* Name()
+        {
+            static std::string name = defaulttype::DataTypeName<defaulttype::RigidDeriv<N, T> >::name();
+            return name.c_str();
+        }
     };
 }

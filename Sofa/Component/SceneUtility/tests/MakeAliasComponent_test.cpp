@@ -54,7 +54,7 @@ using sofa::helper::logging::RichConsoleStyleMessageFormatter ;
 
 using sofa::core::objectmodel::ComponentState ;
 
-#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/simpleapi/SimpleApi.h>
 
 //TODO(dmarchal): handle properly the memory cycle of the simulation objects.
 // now it is soo ugly...
@@ -72,7 +72,7 @@ bool inited = doInit();
 
 void perTestInit()
 {
-    sofa::simpleapi::importPlugin("Sofa.Component.SceneUtility");
+    sofa::simpleapi::importPlugin(Sofa.Component.SceneUtility);
 
     theSimulation = sofa::simulation::getSimulation();
 
